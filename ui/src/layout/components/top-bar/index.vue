@@ -65,6 +65,7 @@ import { useRouter } from 'vue-router'
 import { langList } from '@/locales/index'
 import { useLocale } from '@/locales/useLocale'
 const router = useRouter()
+import.meta.env.VITE_APP_TITLE = '云灵AI'
 const defaultTitle = import.meta.env.VITE_APP_TITLE
 
 const { changeLocale } = useLocale()

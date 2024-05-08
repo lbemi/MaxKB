@@ -1,7 +1,8 @@
 # Mac
 .DS_Store
 */.DS_Store
-
+model/
+*.txt
 # VS Code
 .vscode
 *.project

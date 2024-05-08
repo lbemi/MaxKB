@@ -23,7 +23,8 @@ def collect_static():
     """
     logging.info("Collect static files")
     try:
-        management.call_command('collectstatic', '--no-input', '-c', verbosity=0, interactive=False)
+        management.call_command(
+            'collectstatic', '--no-input', '-c', verbosity=0, interactive=False)
         logging.info("Collect static files done")
     except:
         pass
@@ -44,11 +45,11 @@ def perform_db_migrate():
 
 def start_services():
     management.call_command('migrate')
-    management.call_command('runserver', "0.0.0.0:8080")
+    management.call_command('runserver', "0.0.0.0:8000")
 
 
 if __name__ == '__main__':
-    os.environ['HF_HOME'] = '/opt/maxkb/model/base'
+    os.environ['HF_HOME'] = './apps/model/base'
     parser = argparse.ArgumentParser(
         description="""
            qabot service control tools;

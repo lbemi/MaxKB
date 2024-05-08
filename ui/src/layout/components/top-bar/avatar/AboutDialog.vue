@@ -4,7 +4,7 @@
       <div class="flex-center">
         <div class="logo mr-4"></div>
         <div class="app-logo-font about-title" :id="titleId" :class="titleClass">
-          {{ defaultTitle }}
+          {{ 'defaultTitle' }}
         </div>
       </div>
     </template>

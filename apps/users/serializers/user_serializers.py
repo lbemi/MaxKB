@@ -457,7 +457,7 @@ class UserSerializer(ApiMixin, serializers.ModelSerializer):
             }
         )
 
-    class Query(ApiMixin, serializers.Serializer):
+    class Query(ApiMixin):
         email_or_username = serializers.CharField(required=True)
 
         @staticmethod

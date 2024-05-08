@@ -105,7 +105,8 @@ class ChatView(APIView):
     @swagger_auto_schema(operation_summary="获取对话列表",
                          operation_id="获取对话列表",
                          manual_parameters=ChatApi.get_request_params_api(),
-                         responses=result.get_api_array_response(ChatApi.get_response_body_api()),
+                         responses=result.get_api_array_response(
+                             ChatApi.get_response_body_api()),
                          tags=["应用/对话日志"]
                          )
     @has_permissions(
@@ -143,8 +144,10 @@ class ChatView(APIView):
         @action(methods=['GET'], detail=False)
         @swagger_auto_schema(operation_summary="分页获取对话列表",
                              operation_id="分页获取对话列表",
-                             manual_parameters=result.get_page_request_params(ChatApi.get_request_params_api()),
-                             responses=result.get_page_api_response(ChatApi.get_response_body_api()),
+                             manual_parameters=result.get_page_request_params(
+                                 ChatApi.get_request_params_api()),
+                             responses=result.get_page_api_response(
+                                 ChatApi.get_response_body_api()),
                              tags=["应用/对话日志"]
                              )
         @has_permissions(
@@ -168,7 +171,8 @@ class ChatView(APIView):
             @swagger_auto_schema(operation_summary="获取对话记录详情",
                                  operation_id="获取对话记录详情",
                                  manual_parameters=ChatRecordApi.get_request_params_api(),
-                                 responses=result.get_api_array_response(ChatRecordApi.get_response_body_api()),
+                                 responses=result.get_api_array_response(
+                                     ChatRecordApi.get_response_body_api()),
                                  tags=["应用/对话日志"]
                                  )
             @has_permissions(
@@ -187,7 +191,8 @@ class ChatView(APIView):
         @swagger_auto_schema(operation_summary="获取对话记录列表",
                              operation_id="获取对话记录列表",
                              manual_parameters=ChatRecordApi.get_request_params_api(),
-                             responses=result.get_api_array_response(ChatRecordApi.get_response_body_api()),
+                             responses=result.get_api_array_response(
+                                 ChatRecordApi.get_response_body_api()),
                              tags=["应用/对话日志"]
                              )
         @has_permissions(
@@ -208,7 +213,8 @@ class ChatView(APIView):
                                  operation_id="获取对话记录列表",
                                  manual_parameters=result.get_page_request_params(
                                      ChatRecordApi.get_request_params_api()),
-                                 responses=result.get_page_api_response(ChatRecordApi.get_response_body_api()),
+                                 responses=result.get_page_api_response(
+                                     ChatRecordApi.get_response_body_api()),
                                  tags=["应用/对话日志"]
                                  )
             @has_permissions(
@@ -250,7 +256,8 @@ class ChatView(APIView):
             @swagger_auto_schema(operation_summary="获取标注段落列表信息",
                                  operation_id="获取标注段落列表信息",
                                  manual_parameters=ChatRecordImproveApi.get_request_params_api(),
-                                 responses=result.get_api_response(ChatRecordImproveApi.get_response_body_api()),
+                                 responses=result.get_api_response(
+                                     ChatRecordImproveApi.get_response_body_api()),
                                  tags=["应用/对话日志/标注"]
                                  )
             @has_permissions(
@@ -270,7 +277,8 @@ class ChatView(APIView):
                                  operation_id="标注",
                                  manual_parameters=ImproveApi.get_request_params_api(),
                                  request_body=ImproveApi.get_request_body_api(),
-                                 responses=result.get_api_response(ChatRecordApi.get_response_body_api()),
+                                 responses=result.get_api_response(
+                                     ChatRecordApi.get_response_body_api()),
                                  tags=["应用/对话日志/标注"]
                                  )
             @has_permissions(
@@ -298,7 +306,8 @@ class ChatView(APIView):
                 @swagger_auto_schema(operation_summary="标注",
                                      operation_id="标注",
                                      manual_parameters=ImproveApi.get_request_params_api(),
-                                     responses=result.get_api_response(ChatRecordApi.get_response_body_api()),
+                                     responses=result.get_api_response(
+                                         ChatRecordApi.get_response_body_api()),
                                      tags=["应用/对话日志/标注"]
                                      )
                 @has_permissions(
