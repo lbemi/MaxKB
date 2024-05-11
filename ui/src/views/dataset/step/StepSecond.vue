@@ -95,6 +95,7 @@
       <el-col :span="14" class="p-24 border-l">
         <div v-loading="loading">
           <h4 class="title-decoration-1 mb-8">分段预览</h4>
+
           <ParagraphPreview v-model:data="paragraphList" :isConnect="checkedConnect" />
         </div>
       </el-col>
@@ -216,7 +217,7 @@ defineExpose({
   width: 100%;
 
   .left-height {
-    max-height: calc(var(--create-dataset-height) - 70px);
+    max-height: calc(var(--create-dataset-height) - 110px);
     overflow-x: hidden;
   }
 
