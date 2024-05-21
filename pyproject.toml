@@ -37,7 +37,11 @@ zhipuai = "^2.0.1"
 httpx = { extras = ["http2"], version = "^0.27.0" }
 httpx-sse = "^0.4.0"
 websocket-client = "^1.7.0"
+<<<<<<< HEAD
 datasets = "^2.19.0"
+=======
+langchain-google-genai = "^1.0.3"
+>>>>>>> main
 
 [build-system]
 requires = ["poetry-core"]

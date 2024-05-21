@@ -195,6 +195,7 @@ function deleteMulDocument() {
   })
   problemApi.delMulProblem(id, arr, loading).then(() => {
     MsgSuccess('批量删除成功')
+    multipleTableRef.value?.clearSelection()
     getList()
   })
 }
@@ -296,7 +297,10 @@ const preChatRecord = () => {
   }
 }
 
-function rowClickHandle(row: any) {
+function rowClickHandle(row: any, column?: any) {
+  if (column && column.type === 'selection') {
+    return
+  }
   if (row.paragraph_count) {
     currentClickId.value = row.id
     currentContent.value = row.content

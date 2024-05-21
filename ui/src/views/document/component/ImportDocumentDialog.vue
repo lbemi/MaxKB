@@ -21,7 +21,11 @@
           type="textarea"
         />
       </el-form-item>
-      <el-form-item v-else-if="documentType === '1'" label="文档地址" prop="source_url">
+      <el-form-item
+        v-else-if="!isImport && documentType === '1'"
+        label="文档地址"
+        prop="source_url"
+      >
         <el-input v-model="form.source_url" placeholder="请输入文档地址" />
       </el-form-item>
       <el-form-item label="选择器" v-if="documentType === '1'">
@@ -79,7 +83,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import type { FormInstance, FormRules } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import documentApi from '@/api/document'
 import { MsgSuccess } from '@/utils/message'
 import { hitHandlingMethod } from '../utils'
@@ -124,6 +128,7 @@ watch(dialogVisible, (bool) => {
     }
     isImport.value = false
     documentType.value = ''
+    documentId.value = ''
     documentList.value = []
   }
 })
@@ -142,7 +147,8 @@ const open = (row: any, list: Array<string>) => {
     // 批量设置
     documentList.value = list
   } else {
-    // 导入
+    // 导入 只有web文档类型
+    documentType.value = '1'
     isImport.value = true
   }
   dialogVisible.value = true
@@ -150,14 +156,14 @@ const open = (row: any, list: Array<string>) => {
 
 const submit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  await formEl.validate((valid, fields) => {
+  await formEl.validate((valid) => {
     if (valid) {
       if (isImport.value) {
         const obj = {
           source_url_list: form.value.source_url.split('\n'),
           selector: form.value.selector
         }
-        documentApi.postWebDocument(id, obj, loading).then((res: any) => {
+        documentApi.postWebDocument(id, obj, loading).then(() => {
           MsgSuccess('导入成功')
           emit('refresh')
           dialogVisible.value = false
@@ -172,7 +178,7 @@ const submit = async (formEl: FormInstance | undefined) => {
               selector: form.value.selector
             }
           }
-          documentApi.putDocument(id, documentId.value, obj, loading).then((res) => {
+          documentApi.putDocument(id, documentId.value, obj, loading).then(() => {
             MsgSuccess('设置成功')
             emit('refresh')
             dialogVisible.value = false
@@ -181,10 +187,10 @@ const submit = async (formEl: FormInstance | undefined) => {
           // 批量设置
           const obj = {
             hit_handling_method: form.value.hit_handling_method,
-            directly_return_similarity: form.value.directly_return_similarity,
+            directly_return_similarity: form.value.directly_return_similarity || 0.9,
             id_list: documentList.value
           }
-          documentApi.batchEditHitHandling(id, obj, loading).then((res: any) => {
+          documentApi.batchEditHitHandling(id, obj, loading).then(() => {
             MsgSuccess('设置成功')
             emit('refresh')
             dialogVisible.value = false

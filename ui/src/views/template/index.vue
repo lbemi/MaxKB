@@ -3,7 +3,13 @@
     <div class="template-manage flex main-calc-height">
       <div class="template-manage__left p-8 border-r">
         <h4 class="p-16" style="padding-bottom: 8px">供应商</h4>
-        <common-list :data="provider_list" v-loading="loading" @click="clickListHandle">
+        <common-list
+          :data="provider_list"
+          v-loading="loading"
+          @click="clickListHandle"
+          value-key="provider"
+          default-active=""
+        >
           <template #default="{ row, index }">
             <div class="flex" v-if="index === 0">
               <AppIcon
@@ -80,8 +86,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ElMessage } from 'element-plus'
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import ModelApi from '@/api/model'
 import type { Provider, Model } from '@/api/type/model'
 import AppIcon from '@/components/icons/AppIcon.vue'
@@ -154,6 +159,7 @@ onMounted(() => {
     width: var(--setting-left-width);
     min-width: var(--setting-left-width);
   }
+
   .model-list-height {
     height: calc(var(--create-dataset-height) - 70px);
   }

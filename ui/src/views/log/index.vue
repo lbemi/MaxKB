@@ -121,7 +121,7 @@
       :next="nextChatRecord"
       :pre="preChatRecord"
       ref="ChatRecordRef"
-      v-model:chartId="currentChatId"
+      v-model:chatId="currentChatId"
       v-model:currentAbstract="currentAbstract"
       :application="detail"
       :pre_disable="pre_disable"
@@ -131,16 +131,16 @@
   </LayoutContainer>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, reactive, watch, computed } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { cloneDeep } from 'lodash'
 import ChatRecordDrawer from './component/ChatRecordDrawer.vue'
-import { MsgSuccess, MsgConfirm, MsgError } from '@/utils/message'
+import { MsgSuccess, MsgConfirm } from '@/utils/message'
 import logApi from '@/api/log'
 import { datetimeFormat } from '@/utils/time'
 import useStore from '@/stores'
 import type { Dict } from '@/api/type/common'
-const { application } = useStore()
+const { application, log } = useStore()
 const route = useRoute()
 const {
   params: { id }
@@ -253,7 +253,7 @@ const preChatRecord = () => {
       return
     }
     paginationConfig.current_page = paginationConfig.current_page - 1
-    getList().then((ok) => {
+    getList().then(() => {
       index = paginationConfig.page_size - 1
       currentChatId.value = tableData.value[index].id
       currentAbstract.value = tableData.value[index].abstract
@@ -264,7 +264,10 @@ const preChatRecord = () => {
   }
 }
 
-function rowClickHandle(row: any) {
+function rowClickHandle(row: any, column?: any) {
+  if (column && column.type === 'selection') {
+    return
+  }
   currentChatId.value = row.id
   currentAbstract.value = row.abstract
   ChatRecordRef.value.open()
@@ -308,7 +311,7 @@ function getList() {
   if (search.value) {
     obj = { ...obj, abstract: search.value }
   }
-  return logApi.getChatLog(id as string, paginationConfig, obj, loading).then((res) => {
+  return log.asyncGetChatLog(id as string, paginationConfig, obj, loading).then((res: any) => {
     tableData.value = res.data.records
     if (currentChatId.value) {
       currentChatId.value = tableData.value[0]?.id

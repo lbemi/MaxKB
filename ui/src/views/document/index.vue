@@ -216,7 +216,7 @@
       <ImportDocumentDialog ref="ImportDocumentDialogRef" :title="title" @refresh="refresh" />
       <SyncWebDialog ref="SyncWebDialogRef" @refresh="refresh" />
       <!-- 选择知识库 -->
-      <SelectDatasetDialog ref="SelectDatasetDialogRef" @refresh="refresh" />
+      <SelectDatasetDialog ref="SelectDatasetDialogRef" @refresh="refreshMigrate" />
     </div>
   </LayoutContainer>
 </template>
@@ -243,11 +243,11 @@ const { common, dataset, document } = useStore()
 
 const storeKey = 'documents'
 
-onBeforeRouteUpdate((to: any, from: any) => {
+onBeforeRouteUpdate(() => {
   common.savePage(storeKey, null)
   common.saveCondition(storeKey, null)
 })
-onBeforeRouteLeave((to: any, from: any) => {
+onBeforeRouteLeave((to: any) => {
   if (to.name !== 'Paragraph') {
     common.savePage(storeKey, null)
     common.saveCondition(storeKey, null)
@@ -351,7 +351,7 @@ function refreshDocument(row: any) {
         confirmButtonClass: 'danger'
       })
         .then(() => {
-          documentApi.putDocumentRefresh(row.dataset_id, row.id).then((res) => {
+          documentApi.putDocumentRefresh(row.dataset_id, row.id).then(() => {
             getList()
           })
         })
@@ -365,13 +365,17 @@ function refreshDocument(row: any) {
         .catch(() => {})
     }
   } else {
-    documentApi.putDocumentRefresh(row.dataset_id, row.id).then((res) => {
+    documentApi.putDocumentRefresh(row.dataset_id, row.id).then(() => {
       getList()
     })
   }
 }
 
-function rowClickHandle(row: any) {
+function rowClickHandle(row: any, column: any) {
+  if (column && column.type === 'selection') {
+    return
+  }
+
   router.push({ path: `/dataset/${id}/${row.id}` })
 }
 
@@ -414,6 +418,7 @@ function deleteMulDocument() {
   })
   documentApi.delMulDocument(id, arr, loading).then(() => {
     MsgSuccess('批量删除成功')
+    multipleTableRef.value?.clearSelection()
     getList()
   })
 }
@@ -495,6 +500,11 @@ function getDetail() {
   dataset.asyncGetDatasetDetail(id, loading).then((res: any) => {
     datasetDetail.value = res.data
   })
+}
+
+function refreshMigrate() {
+  multipleTableRef.value?.clearSelection()
+  getList()
 }
 
 function refresh() {
