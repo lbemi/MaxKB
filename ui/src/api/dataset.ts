@@ -1,5 +1,5 @@
 import { Result } from '@/request/Result'
-import { get, post, del, put } from '@/request/index'
+import { get, post, del, put, exportExcel } from '@/request/index'
 import type { datasetData } from '@/api/type/dataset'
 import type { pageRequest } from '@/api/type/common'
 import type { ApplicationFormType } from '@/api/type/application'
@@ -176,6 +176,31 @@ const putSyncWebDataset: (
   return put(`${prefix}/${dataset_id}/sync_web`, undefined, { sync_type }, loading)
 }
 
+/**
+ * 重新向量化知识库
+ * @param 参数 dataset_id
+ */
+const putReEmbeddingDataset: (
+  dataset_id: string,
+  loading?: Ref<boolean>
+) => Promise<Result<any>> = (dataset_id, loading) => {
+  return put(`${prefix}/${dataset_id}/re_embedding`, undefined, undefined, loading)
+}
+
+/**
+ * 导出知识库
+ * @param dataset_name 知识库名称
+ * @param dataset_id   知识库id
+ * @returns
+ */
+const exportDataset: (
+  dataset_name: string,
+  dataset_id: string,
+  loading?: Ref<boolean>
+) => Promise<any> = (dataset_name, dataset_id, loading) => {
+  return exportExcel(dataset_name + '.xls', `dataset/${dataset_id}/export`, undefined, loading)
+}
+
 export default {
   getDataset,
   getAllDataset,
@@ -186,6 +211,8 @@ export default {
   listUsableApplication,
   getDatasetHitTest,
   postWebDataset,
+  putSyncWebDataset,
+  putReEmbeddingDataset,
   postQADataset,
-  putSyncWebDataset
+  exportDataset
 }

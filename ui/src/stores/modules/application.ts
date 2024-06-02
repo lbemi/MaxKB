@@ -66,6 +66,7 @@ const useApplicationStore = defineStore({
           .postAppAuthentication(token, loading)
           .then((res) => {
             localStorage.setItem('accessToken', res.data)
+            sessionStorage.setItem('accessToken', res.data)
             resolve(res)
           })
           .catch((error) => {

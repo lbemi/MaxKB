@@ -145,7 +145,10 @@
                     </div>
                     <el-tooltip effect="dark" placement="right">
                       <template #content>{{
-                        $t('views.application.applicationForm.form.prompt.tooltip')
+                        $t('views.application.applicationForm.form.prompt.tooltip', {
+                          data: '{data}',
+                          question: '{question}'
+                        })
                       }}</template>
                       <AppIcon iconName="app-warning" class="app-warning-icon"></AppIcon>
                     </el-tooltip>
@@ -335,7 +338,10 @@ const {
   params: { id }
 } = route as any
 // @ts-ignore
-const defaultPrompt = t('views.application.prompt.defaultPrompt')
+const defaultPrompt = t('views.application.prompt.defaultPrompt', {
+  data: '{data}',
+  question: '{question}'
+})
 
 const ParamSettingDialogRef = ref<InstanceType<typeof ParamSettingDialog>>()
 const createModelRef = ref<InstanceType<typeof CreateModelDialog>>()

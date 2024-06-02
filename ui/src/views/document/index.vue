@@ -146,7 +146,7 @@
                 <span class="mr-4">
                   <el-tooltip effect="dark" content="重新向量化" placement="top">
                     <el-button type="primary" text @click.stop="refreshDocument(row)">
-                      <el-icon><RefreshRight /></el-icon>
+                      <AppIcon iconName="app-document-refresh" style="font-size: 16px"></AppIcon>
                     </el-button>
                   </el-tooltip>
                 </span>
@@ -165,6 +165,10 @@
                           <AppIcon iconName="app-migrate"></AppIcon>
                           迁移
                         </el-dropdown-item>
+                        <el-dropdown-item @click="exportDocument(row)">
+                          <AppIcon iconName="app-export"></AppIcon>
+                          导出
+                        </el-dropdown-item>
                         <el-dropdown-item icon="Delete" @click.stop="deleteDocument(row)"
                           >删除</el-dropdown-item
                         >
@@ -174,13 +178,8 @@
                 </span>
               </div>
               <div v-if="datasetDetail.type === '1'">
-                <el-tooltip
-                  effect="dark"
-                  content="同步"
-                  placement="top"
-                  v-if="datasetDetail.type === '1'"
-                >
-                  <el-button type="primary" text @click.stop="refreshDocument(row)">
+                <el-tooltip effect="dark" content="同步" placement="top">
+                  <el-button type="primary" text @click.stop="syncDocument(row)">
                     <el-icon><Refresh /></el-icon>
                   </el-button>
                 </el-tooltip>
@@ -191,6 +190,13 @@
                     </el-button>
                     <template #dropdown>
                       <el-dropdown-menu>
+                        <el-dropdown-item @click="refreshDocument(row)">
+                          <AppIcon
+                            iconName="app-document-refresh"
+                            style="font-size: 16px"
+                          ></AppIcon>
+                          重新向量化</el-dropdown-item
+                        >
                         <el-dropdown-item icon="Setting" @click="settingDoc(row)"
                           >设置</el-dropdown-item
                         >
@@ -198,6 +204,10 @@
                           <AppIcon iconName="app-migrate"></AppIcon>
                           迁移</el-dropdown-item
                         >
+                        <el-dropdown-item @click="exportDocument(row)">
+                          <AppIcon iconName="app-export"></AppIcon>
+                          导出
+                        </el-dropdown-item>
                         <el-dropdown-item icon="Delete" @click.stop="deleteDocument(row)"
                           >删除</el-dropdown-item
                         >
@@ -279,7 +289,11 @@ const multipleSelection = ref<any[]>([])
 const title = ref('')
 
 const SelectDatasetDialogRef = ref()
-
+const exportDocument = (document: any) => {
+  documentApi.exportDocument(document.name, document.dataset_id, document.id, loading).then(() => {
+    MsgSuccess('导出成功')
+  })
+}
 function openDatasetDialog(row?: any) {
   const arr: string[] = []
   if (row) {
@@ -340,32 +354,32 @@ const closeInterval = () => {
     clearInterval(interval)
   }
 }
-function refreshDocument(row: any) {
-  if (row.type === '1') {
-    if (row.meta?.source_url) {
-      MsgConfirm(`确认同步文档?`, `同步将删除已有数据重新获取新数据，请谨慎操作。`, {
-        confirmButtonText: '同步',
-        confirmButtonClass: 'danger'
-      })
-        .then(() => {
-          documentApi.putDocumentRefresh(row.dataset_id, row.id).then(() => {
-            getList()
-          })
-        })
-        .catch(() => {})
-    } else {
-      MsgConfirm(`提示`, `无法同步，请先去设置文档 URL地址`, {
-        confirmButtonText: '确认',
-        type: 'warning'
-      })
-        .then(() => {})
-        .catch(() => {})
-    }
-  } else {
-    documentApi.putDocumentRefresh(row.dataset_id, row.id).then(() => {
-      getList()
+
+function syncDocument(row: any) {
+  if (row.meta?.source_url) {
+    MsgConfirm(`确认同步文档?`, `同步将删除已有数据重新获取新数据，请谨慎操作。`, {
+      confirmButtonText: '同步',
+      confirmButtonClass: 'danger'
     })
+      .then(() => {
+        documentApi.putDocumentSync(row.dataset_id, row.id).then(() => {
+          getList()
+        })
+      })
+      .catch(() => {})
+  } else {
+    MsgConfirm(`提示`, `无法同步，请先去设置文档 URL地址`, {
+      confirmButtonText: '确认',
+      type: 'warning'
+    })
+      .then(() => {})
+      .catch(() => {})
   }
+}
+function refreshDocument(row: any) {
+  documentApi.putDocumentRefresh(row.dataset_id, row.id).then(() => {
+    getList()
+  })
 }
 
 function rowClickHandle(row: any, column: any) {
