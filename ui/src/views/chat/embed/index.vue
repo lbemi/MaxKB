@@ -5,7 +5,7 @@
         <h4 class="ml-24">{{ applicationDetail?.name }}</h4>
       </div>
     </div>
-    <div class="chat-embed__main chat-width">
+    <div class="chat-embed__main">
       <AiChat
         ref="AiChatRef"
         v-model:data="applicationDetail"
@@ -17,12 +17,14 @@
         @scroll="handleScroll"
         class="AiChat-embed"
       >
+        <template #operateBefore>
+          <el-button type="primary" link class="new-chat-button mb-8" @click="newChat">
+            <el-icon><Plus /></el-icon><span class="ml-4">新建对话</span>
+          </el-button>
+        </template>
       </AiChat>
     </div>
 
-    <el-button type="primary" link class="new-chat-button" @click="newChat">
-      <el-icon><Plus /></el-icon><span class="ml-4">新建对话</span>
-    </el-button>
     <!-- 历史记录弹出层 -->
     <div @click.prevent.stop="show = !show" class="chat-popover-button cursor color-secondary">
       <AppIcon iconName="app-history-outlined"></AppIcon>
@@ -41,11 +43,20 @@
               v-loading="left_loading"
               :defaultActive="currentChatId"
               @click="clickListHandle"
+              @mouseenter="mouseenter"
+              @mouseleave="mouseId = ''"
             >
               <template #default="{ row }">
-                <auto-tooltip :content="row.abstract">
-                  {{ row.abstract }}
-                </auto-tooltip>
+                <div class="flex-between">
+                  <auto-tooltip :content="row.abstract">
+                    {{ row.abstract }}
+                  </auto-tooltip>
+                  <div @click.stop v-if="mouseId === row.id">
+                    <el-button style="padding: 0" link @click.stop="deleteLog(row)">
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </div>
+                </div>
               </template>
               <template #empty>
                 <div class="text-center">
@@ -91,6 +102,23 @@ const paginationConfig = reactive({
 
 const currentRecordList = ref<any>([])
 const currentChatId = ref('new') // 当前历史记录Id 默认为'new'
+
+const mouseId = ref('')
+
+function mouseenter(row: any) {
+  mouseId.value = row.id
+}
+function deleteLog(row: any) {
+  log.asyncDelChatClientLog(applicationDetail.value.id, row.id, left_loading).then(() => {
+    if (currentChatId.value === row.id) {
+      currentChatId.value = 'new'
+      paginationConfig.current_page = 1
+      paginationConfig.total = 0
+      currentRecordList.value = []
+    }
+    getChatLog(applicationDetail.value.id)
+  })
+}
 
 function handleScroll(event: any) {
   if (
@@ -226,9 +254,6 @@ onMounted(() => {
     overflow: hidden;
   }
   .new-chat-button {
-    position: absolute;
-    bottom: 80px;
-    left: 18px;
     z-index: 11;
   }
   // 历史对话弹出层
@@ -280,16 +305,9 @@ onMounted(() => {
       top: 50%;
     }
   }
-  .chat-width {
-    max-width: var(--app-chat-width, 860px);
-    margin: 0 auto;
-  }
   .AiChat-embed {
     .ai-chat__operate {
-      padding-top: 38px;
-    }
-    .ai-chat__content {
-      padding-bottom: 104px
+      padding-top: 12px;
     }
   }
 }

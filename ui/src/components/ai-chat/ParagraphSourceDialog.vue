@@ -7,9 +7,9 @@
     append-to-body
     align-center
   >
-    <div class="paragraph-source-height">
+    <div class="mb-8">
       <el-scrollbar>
-        <div class="p-16">
+        <div class="paragraph-source-height p-16 pb-0">
           <el-form label-position="top">
             <el-form-item label="用户问题">
               <el-input v-model="detail.problem_text" disabled />
@@ -43,18 +43,22 @@
                   </template>
                   <template #footer>
                     <div class="footer-content flex-between">
-                      <el-text>
-                        <el-icon>
+                      <el-text class="flex align-center">
+                        <el-icon class="mr-4">
                           <Document />
                         </el-icon>
-                        {{ item?.document_name }}
+                        <span class="ellipsis-1 break-all" :title="item?.document_name">
+                          {{ item?.document_name }}</span
+                        >
                       </el-text>
                       <div class="flex align-center">
                         <AppAvatar class="mr-8" shape="square" :size="18">
                           <img src="@/assets/icon_document.svg" style="width: 58%" alt="" />
                         </AppAvatar>
 
-                        <span class="ellipsis"> {{ item?.dataset_name }}</span>
+                        <span class="ellipsis" :title="item?.dataset_name">
+                          {{ item?.dataset_name }}</span
+                        >
                       </div>
                     </div>
                   </template>
@@ -108,7 +112,7 @@ defineExpose({ open })
     padding: 8px !important;
   }
   .paragraph-source-height {
-    height: calc(100vh - 260px);
+    max-height: calc(100vh - 260px);
   }
   .paragraph-source-card {
     height: 260px;
