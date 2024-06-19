@@ -137,6 +137,34 @@ class Dataset(APIView):
                                                  'search_mode': request.query_params.get('search_mode')}).hit_test(
                 ))
 
+    class Embedding(APIView):
+        authentication_classes = [TokenAuth]
+
+        @action(methods="PUT", detail=False)
+        @swagger_auto_schema(operation_summary="重新向量化", operation_id="重新向量化",
+                             manual_parameters=DataSetSerializers.Operate.get_request_params_api(),
+                             responses=result.get_default_response(),
+                             tags=["知识库"]
+                             )
+        @has_permissions(lambda r, keywords: Permission(group=Group.DATASET, operate=Operate.MANAGE,
+                                                        dynamic_tag=keywords.get('dataset_id')))
+        def put(self, request: Request, dataset_id: str):
+            return result.success(
+                DataSetSerializers.Operate(data={'id': dataset_id, 'user_id': request.user.id}).re_embedding())
+
+    class Export(APIView):
+        authentication_classes = [TokenAuth]
+
+        @action(methods="GET", detail=False)
+        @swagger_auto_schema(operation_summary="导出知识库", operation_id="导出知识库",
+                             manual_parameters=DataSetSerializers.Operate.get_request_params_api(),
+                             tags=["知识库"]
+                             )
+        @has_permissions(lambda r, keywords: Permission(group=Group.DATASET, operate=Operate.MANAGE,
+                                                        dynamic_tag=keywords.get('dataset_id')))
+        def get(self, request: Request, dataset_id: str):
+            return DataSetSerializers.Operate(data={'id': dataset_id, 'user_id': request.user.id}).export_excel()
+
     class Operate(APIView):
         authentication_classes = [TokenAuth]
 

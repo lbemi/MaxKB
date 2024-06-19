@@ -137,12 +137,8 @@ const getDocumentDetail: (dataset_id: string, document_id: string) => Promise<Re
 
 /**
  * 刷新文档向量库
- * @param 参数 
- * dataset_id, document_id, 
- * {
-      "name": "string",
-      "is_active": true
-    }
+ * @param 参数
+ * dataset_id, document_id,
  */
 const putDocumentRefresh: (
   dataset_id: string,
@@ -155,6 +151,19 @@ const putDocumentRefresh: (
     undefined,
     loading
   )
+}
+
+/**
+ * 同步web站点类型
+ * @param 参数
+ * dataset_id, document_id,
+ */
+const putDocumentSync: (
+  dataset_id: string,
+  document_id: string,
+  loading?: Ref<boolean>
+) => Promise<Result<any>> = (dataset_id, document_id, loading) => {
+  return put(`${prefix}/${dataset_id}/document/${document_id}/sync`, undefined, undefined, loading)
 }
 
 /**
@@ -247,6 +256,28 @@ const exportQATemplate: (fileName: string, type: string, loading?: Ref<boolean>)
   return exportExcel(fileName, `${prefix}/document/template/export`, { type }, loading)
 }
 
+/**
+ * 导出文档
+ * @param document_name 文档名称
+ * @param dataset_id    数据集id
+ * @param document_id   文档id
+ * @param loading       加载器
+ * @returns
+ */
+const exportDocument: (
+  document_name: string,
+  dataset_id: string,
+  document_id: string,
+  loading?: Ref<boolean>
+) => Promise<any> = (document_name, dataset_id, document_id, loading) => {
+  return exportExcel(
+    document_name + '.xls',
+    `${prefix}/${dataset_id}/document/${document_id}/export`,
+    {},
+    loading
+  )
+}
+
 export default {
   postSplitDocument,
   getDocument,
@@ -258,10 +289,12 @@ export default {
   getDocumentDetail,
   listSplitPattern,
   putDocumentRefresh,
+  putDocumentSync,
   delMulSyncDocument,
   postWebDocument,
   putMigrateMulDocument,
   batchEditHitHandling,
   exportQATemplate,
-  postQADocument
+  postQADocument,
+  exportDocument
 }

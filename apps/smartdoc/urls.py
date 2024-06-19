@@ -19,17 +19,18 @@ import os
 from django.http import HttpResponse
 from django.urls import path, re_path, include
 from django.views import static
-from drf_yasg import openapi
+from rest_framework import status
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions, status
-
-from common.auth import AnonymousAuthentication
+from drf_yasg import openapi
+from application.urls import urlpatterns as application_urlpatterns
+from common.init.init_doc import init_doc
 from common.response.result import Result
 from smartdoc import settings
 from smartdoc.conf import PROJECT_DIR
+from rest_framework import permissions, status
 
+from common.auth import AnonymousAuthentication
 schema_view = get_schema_view(
-
     openapi.Info(
         title="Python API",
         default_version='v1',
@@ -39,7 +40,6 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
     authentication_classes=[AnonymousAuthentication]
 )
-
 urlpatterns = [
     path("api/", include("users.urls")),
     path("api/", include("dataset.urls")),
@@ -86,7 +86,7 @@ def page_not_found(request, exception):
 
 
 handler404 = page_not_found
-
+init_doc(urlpatterns, application_urlpatterns)
 urlpatterns += [
     re_path(r'^doc(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0),
             name='schema-json'),  # 导出

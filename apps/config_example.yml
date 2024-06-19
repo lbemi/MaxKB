@@ -9,7 +9,7 @@ EMAIL_HOST_PASSWORD:
 
 # 数据库链接信息
 DB_NAME: maxkb
-DB_HOST: localhost
+DB_HOST: 192.168.3.86
 DB_PORT: 5432
 DB_USER: postgres
 DB_PASSWORD: Admin_1234

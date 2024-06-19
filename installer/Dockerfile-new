@@ -8,7 +8,7 @@ RUN cd ui && \
 FROM ghcr.io/1panel-dev/maxkb-python-pg:python3.11-pg15.6 as stage-build
 
 ARG DEPENDENCIES="                    \
-        python3-pip"
+    python3-pip"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $DEPENDENCIES && \

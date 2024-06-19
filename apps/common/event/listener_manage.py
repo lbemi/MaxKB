@@ -6,6 +6,7 @@
     @date：2023/10/20 14:01
     @desc:
 """
+import datetime
 import logging
 import os
 import traceback
@@ -123,6 +124,8 @@ class ListenerManagement:
         :return: None
         """
         max_kb.info(f"开始--->向量化文档:{document_id}")
+        QuerySet(Document).filter(id=document_id).update(**{'status': Status.embedding})
+        QuerySet(Paragraph).filter(document_id=document_id).update(**{'status': Status.embedding})
         status = Status.success
         try:
             data_list = native_search(
@@ -141,7 +144,8 @@ class ListenerManagement:
             status = Status.error
         finally:
             # 修改状态
-            QuerySet(Document).filter(id=document_id).update(**{'status': status})
+            QuerySet(Document).filter(id=document_id).update(
+                **{'status': status, 'update_time': datetime.datetime.now()})
             QuerySet(Paragraph).filter(document_id=document_id).update(**{'status': status})
             max_kb.info(f"结束--->向量化文档:{document_id}")
 
