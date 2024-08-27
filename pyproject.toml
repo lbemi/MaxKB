@@ -6,7 +6,7 @@ authors = ["shaohuzhang1 <shaohu.zhang@fit2cloud.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.11,<3.13"
 django = "4.2.15"
 djangorestframework = "^3.15.2"
 drf-yasg = "1.21.7"
@@ -19,7 +19,7 @@ jieba = "^0.42.1"
 diskcache = "^5.6.3"
 pillow = "^10.2.0"
 filetype = "^1.2.0"
-torch = "^2.2.2"
+torch = "2.2.2"
 sentence-transformers = "^2.2.2"
 openai = "^1.13.3"
 tiktoken = "^0.7.0"
