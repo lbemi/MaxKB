@@ -19,11 +19,11 @@
       <span class="lighter" v-else>{{ form.title || '-' }}</span>
     </el-form-item>
     <el-form-item label="分段内容" prop="content">
-      <MarkdownEditor
+      <MdEditor
         v-if="isEdit"
         v-model="form.content"
         placeholder="请输入分段内容"
-        :maxLength="4096"
+        :maxLength="100000"
         :preview="false"
         :toolbars="toolbars"
         style="height: 300px"
@@ -31,9 +31,9 @@
         :footers="footers"
       >
         <template #defFooters>
-          <span style="margin-left: -6px">/ 4096</span>
+          <span style="margin-left: -6px">/ 100000</span>
         </template>
-      </MarkdownEditor>
+      </MdEditor>
       <MdPreview
         v-else
         ref="editorRef"
@@ -47,8 +47,6 @@
 <script setup lang="ts">
 import { ref, reactive, onUnmounted, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { MdPreview } from 'md-editor-v3'
-import MarkdownEditor from '@/components/markdown-editor/index.vue'
 import imageApi from '@/api/image'
 const props = defineProps({
   data: {
@@ -100,7 +98,7 @@ const form = ref<any>({
 const rules = reactive<FormRules>({
   content: [
     { required: true, message: '请输入分段内容', trigger: 'blur' },
-    { max: 4096, message: '内容最多不超过 4096 个字', trigger: 'blur' }
+    { max: 100000, message: '内容最多不超过 100000 个字', trigger: 'blur' }
   ]
 })
 

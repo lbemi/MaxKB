@@ -1,7 +1,7 @@
 <template>
   <div class="dataset-list-container p-24" style="padding-top: 16px">
     <div class="flex-between mb-16">
-      <h3>知识库</h3>
+      <h4>知识库</h4>
       <el-input
         v-model="searchValue"
         @change="searchHandle"
@@ -22,7 +22,7 @@
       >
         <el-row :gutter="15">
           <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="4" class="mb-16">
-            <CardAdd title="创建知识库" @click="router.push({ path: '/dataset/create' })" />
+            <CardAdd title="创建知识库" @click="openCreateDialog" />
           </el-col>
           <template v-for="(item, index) in datasetList" :key="index">
             <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="4" class="mb-16">
@@ -41,12 +41,12 @@
                   >
                     <img src="@/assets/icon_web.svg" style="width: 58%" alt="" />
                   </AppAvatar>
-                  <AppAvatar v-else class="mr-8" shape="square" :size="32">
+                  <AppAvatar v-else class="mr-8 avatar-blue" shape="square" :size="32">
                     <img src="@/assets/icon_document.svg" style="width: 58%" alt="" />
                   </AppAvatar>
                 </template>
                 <div class="delete-button">
-                  <el-tag v-if="item.type === '0'">通用型</el-tag>
+                  <el-tag class="blue-tag" v-if="item.type === '0'">通用型</el-tag>
                   <el-tag class="purple-tag" v-else-if="item.type === '1'" type="warning"
                     >Web 站点</el-tag
                   >
@@ -107,17 +107,20 @@
       </InfiniteScroll>
     </div>
     <SyncWebDialog ref="SyncWebDialogRef" @refresh="refresh" />
+    <CreateDatasetDialog ref="CreateDatasetDialogRef"/>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue'
 import SyncWebDialog from '@/views/dataset/component/SyncWebDialog.vue'
+import CreateDatasetDialog from './component/CreateDatasetDialog.vue'
 import datasetApi from '@/api/dataset'
 import { MsgSuccess, MsgConfirm } from '@/utils/message'
 import { useRouter } from 'vue-router'
 import { numberFormat } from '@/utils/utils'
 const router = useRouter()
 
+const CreateDatasetDialogRef = ref()
 const SyncWebDialogRef = ref()
 const loading = ref(false)
 const datasetList = ref<any[]>([])
@@ -128,6 +131,10 @@ const paginationConfig = reactive({
 })
 
 const searchValue = ref('')
+
+function openCreateDialog() {
+  CreateDatasetDialogRef.value.open()
+}
 
 function refresh() {
   MsgSuccess('同步任务发送成功')

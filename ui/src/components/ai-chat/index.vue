@@ -4,9 +4,8 @@
       <div ref="dialogScrollbar" class="ai-chat__content p-24 chat-width">
         <div class="item-content mb-16" v-if="!props.available || (props.data?.prologue && !log)">
           <div class="avatar">
-            <AppAvatar class="avatar-gradient">
-              <img src="@/assets/icon_robot.svg" style="width: 75%" alt="" />
-            </AppAvatar>
+            <img v-if="data.avatar" :src="data.avatar" height="30px" />
+            <LogoIcon v-else height="30px" />
           </div>
 
           <div class="content">
@@ -27,6 +26,8 @@
                   ref="editorRef"
                   editorId="preview-only"
                   :modelValue="item.str"
+                  noIconfont
+                  no-mermaid
                 />
               </template>
             </el-card>
@@ -41,7 +42,7 @@
               </AppAvatar>
             </div>
             <div class="content">
-              <div class="text break-all">
+              <div class="text break-all pre-wrap">
                 {{ item.problem_text }}
               </div>
             </div>
@@ -49,9 +50,8 @@
           <!-- 回答 -->
           <div class="item-content mb-16 lighter">
             <div class="avatar">
-              <AppAvatar class="avatar-gradient">
-                <img src="@/assets/icon_robot.svg" style="width: 75%" alt="" />
-              </AppAvatar>
+              <img v-if="data.avatar" :src="data.avatar" height="30px" />
+              <LogoIcon v-else height="30px" />
             </div>
 
             <div class="content">
@@ -61,7 +61,13 @@
                   shadow="always"
                   class="dialog-card"
                 >
-                  抱歉，没有查找到相关内容，请重新描述您的问题或提供更多信息。
+                  <MdRenderer
+                    source=" 抱歉，没有查找到相关内容，请重新描述您的问题或提供更多信息。"
+                  ></MdRenderer>
+                  <!-- 知识来源 -->
+                  <div v-if="showSource(item)">
+                    <KnowledgeSource :data="item" :type="props.data.type" />
+                  </div>
                 </el-card>
                 <el-card v-else-if="item.is_stop" shadow="always" class="dialog-card">
                   已停止回答
@@ -72,39 +78,13 @@
               </div>
 
               <el-card v-else shadow="always" class="dialog-card">
-                <MdRenderer :source="item.answer_text"></MdRenderer>
+                <MdRenderer
+                  :source="item.answer_text"
+                  :quick-problem-handle="quickProblemHandle"
+                ></MdRenderer>
+                <!-- 知识来源 -->
                 <div v-if="showSource(item)">
-                  <el-divider> <el-text type="info">知识来源</el-text> </el-divider>
-                  <div>
-                    <el-space wrap>
-                      <el-button
-                        v-for="(dataset, index) in item.dataset_list"
-                        :key="index"
-                        type="primary"
-                        plain
-                        size="small"
-                        @click="openParagraph(item, dataset.id)"
-                        >{{ dataset.name }}</el-button
-                      >
-                    </el-space>
-                  </div>
-
-                  <div>
-                    <el-button
-                      class="mr-8 mt-8"
-                      type="primary"
-                      plain
-                      size="small"
-                      @click="openParagraph(item)"
-                      >引用分段：{{ item.paragraph_list?.length || 0 }}</el-button
-                    >
-                    <el-tag type="info" effect="plain" class="mr-8 mt-8">
-                      消耗 tokens: {{ item?.message_tokens + item?.answer_tokens }}
-                    </el-tag>
-                    <el-tag type="info" effect="plain" class="mt-8">
-                      耗时: {{ item.run_time?.toFixed(2) }} s
-                    </el-tag>
-                  </div>
+                  <KnowledgeSource :data="item" :type="props.data.type" />
                 </div>
               </el-card>
               <div class="flex-between mt-8" v-if="log">
@@ -125,7 +105,7 @@
                   >
                 </div>
               </div>
-              <div v-if="item.write_ed && props.appId" class="flex-between">
+              <div v-if="item.write_ed && props.appId && 500 != item.status" class="flex-between">
                 <OperationButton
                   :data="item"
                   :applicationId="appId"
@@ -145,7 +125,7 @@
         <el-input
           ref="quickInputRef"
           v-model="inputValue"
-          placeholder="请输入"
+          placeholder="请输入问题，Ctrl+Enter 换行，Enter发送"
           :autosize="{ minRows: 1, maxRows: isMobile ? 4 : 10 }"
           type="textarea"
           :maxlength="100000"
@@ -159,17 +139,16 @@
             @click="sendChatHandle"
           >
             <img v-show="isDisabledChart || loading" src="@/assets/icon_send.svg" alt="" />
-            <img
-              v-show="!isDisabledChart && !loading"
+            <SendIcon v-show="!isDisabledChart && !loading" />
+            <!-- <img
+           
               src="@/assets/icon_send_colorful.svg"
               alt=""
-            />
+            /> -->
           </el-button>
         </div>
       </div>
     </div>
-    <!-- 知识库引用 dialog -->
-    <ParagraphSourceDialog ref="ParagraphSourceDialogRef" />
   </div>
 </template>
 <script setup lang="ts">
@@ -177,14 +156,14 @@ import { ref, nextTick, computed, watch, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import LogOperationButton from './LogOperationButton.vue'
 import OperationButton from './OperationButton.vue'
-import ParagraphSourceDialog from './ParagraphSourceDialog.vue'
+import KnowledgeSource from './KnowledgeSource.vue'
 import applicationApi from '@/api/application'
 import logApi from '@/api/log'
 import { ChatManagement, type chatType } from '@/api/type/application'
 import { randomId } from '@/utils/utils'
 import useStore from '@/stores'
-import MdRenderer from '@/components/markdown-renderer/MdRenderer.vue'
-import { MdPreview } from 'md-editor-v3'
+import MdRenderer from '@/components/markdown/MdRenderer.vue'
+import { isWorkFlow } from '@/utils/application'
 import { debounce } from 'lodash'
 defineOptions({ name: 'AiChat' })
 const route = useRoute()
@@ -222,7 +201,6 @@ const isMobile = computed(() => {
   return common.isMobile() || mode === 'embed'
 })
 
-const ParagraphSourceDialogRef = ref()
 const aiChatRef = ref()
 const quickInputRef = ref()
 const scrollDiv = ref()
@@ -304,17 +282,13 @@ watch(
 function showSource(row: any) {
   if (props.log) {
     return true
-  } else if (row.write_ed) {
+  } else if (row.write_ed && 500 !== row.status) {
     if (id || props.data?.show_source) {
       return true
     }
   } else {
     return false
   }
-}
-
-function openParagraph(row: any, id?: string) {
-  ParagraphSourceDialogRef.value.open(row, id)
 }
 
 function quickProblemHandle(val: string) {
@@ -371,16 +345,32 @@ function getChartOpenId(chat?: any) {
         }
       })
   } else {
-    return applicationApi
-      .postChatOpen(obj)
-      .then((res) => {
-        chartOpenId.value = res.data
-        chatMessage(chat)
-      })
-      .catch((res) => {
-        loading.value = false
-        return Promise.reject(res)
-      })
+    if (isWorkFlow(obj.type)) {
+      const submitObj = {
+        work_flow: obj.work_flow
+      }
+      return applicationApi
+        .postWorkflowChatOpen(submitObj)
+        .then((res) => {
+          chartOpenId.value = res.data
+          chatMessage(chat)
+        })
+        .catch((res) => {
+          loading.value = false
+          return Promise.reject(res)
+        })
+    } else {
+      return applicationApi
+        .postChatOpen(obj)
+        .then((res) => {
+          chartOpenId.value = res.data
+          chatMessage(chat)
+        })
+        .catch((res) => {
+          loading.value = false
+          return Promise.reject(res)
+        })
+    }
   }
 }
 /**
@@ -465,6 +455,7 @@ const errorWrite = (chat: any, message?: string) => {
   ChatManagement.addChatRecord(chat, 50, loading)
   ChatManagement.write(chat.id)
   ChatManagement.append(chat.id, message || '抱歉，当前正在维护，无法提供服务，请稍后再试！')
+  ChatManagement.updateStatus(chat.id, 500)
   ChatManagement.close(chat.id)
 }
 function chatMessage(chat?: any, problem?: string, re_chat?: boolean) {
@@ -478,7 +469,8 @@ function chatMessage(chat?: any, problem?: string, re_chat?: boolean) {
       write_ed: false,
       is_stop: false,
       record_id: '',
-      vote_status: '-1'
+      vote_status: '-1',
+      status: undefined
     })
     chatList.value.push(chat)
     ChatManagement.addChatRecord(chat, 50, loading)
@@ -615,8 +607,10 @@ watch(
 
 onMounted(() => {
   setTimeout(() => {
-    quickInputRef.value.textarea.style.height = '0'
-  }, 1000)
+    if (quickInputRef.value && mode === 'embed') {
+      quickInputRef.value.textarea.style.height = '0'
+    }
+  }, 1800)
 })
 
 defineExpose({

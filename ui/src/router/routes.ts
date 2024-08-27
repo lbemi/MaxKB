@@ -8,9 +8,16 @@ export const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/layout/app-layout/index.vue'),
     redirect: '/application',
     children: [...rolesRoutes]
+  },
+
+  // 高级编排
+  {
+    path: '/application/:id/workflow',
+    name: 'ApplicationWorkflow',
+    meta: { activeMenu: '/application' },
+    component: () => import('@/views/application-workflow/index.vue')
   },
 
   {

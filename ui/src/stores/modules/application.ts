@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import applicationApi from '@/api/application'
-import { type Ref } from 'vue'
+import applicationXpackApi from '@/api/application-xpack'
+import { type Ref, type UnwrapRef } from 'vue'
+
+import useUserStore from './user'
+import type { ApplicationFormType } from '@/api/type/application'
 
 const useApplicationStore = defineStore({
   id: 'application',
@@ -49,14 +53,51 @@ const useApplicationStore = defineStore({
 
     async asyncGetAccessToken(id: string, loading?: Ref<boolean>) {
       return new Promise((resolve, reject) => {
-        applicationApi
-          .getAccessToken(id, loading)
-          .then((data) => {
-            resolve(data)
-          })
-          .catch((error) => {
-            reject(error)
-          })
+        const user = useUserStore()
+        if (user.isEnterprise()) {
+          applicationXpackApi
+            .getAccessToken(id, loading)
+            .then((data) => {
+              resolve(data)
+            })
+            .catch((error) => {
+              reject(error)
+            })
+        } else {
+          applicationApi
+            .getAccessToken(id, loading)
+            .then((data) => {
+              resolve(data)
+            })
+            .catch((error) => {
+              reject(error)
+            })
+        }
+      })
+    },
+
+    async asyncGetAppProfile(loading?: Ref<boolean>) {
+      return new Promise((resolve, reject) => {
+        const user = useUserStore()
+        if (user.isEnterprise()) {
+          applicationXpackApi
+            .getAppXpackProfile(loading)
+            .then((data) => {
+              resolve(data)
+            })
+            .catch((error) => {
+              reject(error)
+            })
+        } else {
+          applicationApi
+            .getAppProfile(loading)
+            .then((data) => {
+              resolve(data)
+            })
+            .catch((error) => {
+              reject(error)
+            })
+        }
       })
     },
 

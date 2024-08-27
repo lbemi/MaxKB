@@ -10,7 +10,9 @@ import uuid
 
 from django.db import models
 
+from common.db.sql_execute import select_one
 from common.mixins.app_model_mixin import AppModelMixin
+from setting.models import Model
 from users.models import User
 
 
@@ -19,6 +21,7 @@ class Status(models.TextChoices):
     embedding = 0, '导入中'
     success = 1, '已完成'
     error = 2, '导入失败'
+    queue_up = 3, '排队中'
 
 
 class Type(models.TextChoices):
@@ -32,6 +35,10 @@ class HitHandlingMethod(models.TextChoices):
     directly_return = 'directly_return', '直接返回'
 
 
+def default_model():
+    return uuid.UUID('42f63a3d-427e-11ef-b3ec-a8a1595801ab')
+
+
 class DataSet(AppModelMixin):
     """
     数据集表
@@ -42,7 +49,8 @@ class DataSet(AppModelMixin):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="所属用户")
     type = models.CharField(verbose_name='类型', max_length=1, choices=Type.choices,
                             default=Type.base)
-
+    embedding_mode = models.ForeignKey(Model, on_delete=models.DO_NOTHING, verbose_name="向量模型",
+                                       default=default_model)
     meta = models.JSONField(verbose_name="元数据", default=dict)
 
     class Meta:
@@ -58,7 +66,7 @@ class Document(AppModelMixin):
     name = models.CharField(max_length=150, verbose_name="文档名称")
     char_length = models.IntegerField(verbose_name="文档字符数 冗余字段")
     status = models.CharField(verbose_name='状态', max_length=1, choices=Status.choices,
-                              default=Status.embedding)
+                              default=Status.queue_up)
     is_active = models.BooleanField(default=True)
 
     type = models.CharField(verbose_name='类型', max_length=1, choices=Type.choices,
@@ -81,7 +89,7 @@ class Paragraph(AppModelMixin):
     id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
     document = models.ForeignKey(Document, on_delete=models.DO_NOTHING, db_constraint=False)
     dataset = models.ForeignKey(DataSet, on_delete=models.DO_NOTHING)
-    content = models.CharField(max_length=4096, verbose_name="段落内容")
+    content = models.CharField(max_length=102400, verbose_name="段落内容")
     title = models.CharField(max_length=256, verbose_name="标题", default="")
     status = models.CharField(verbose_name='状态', max_length=1, choices=Status.choices,
                               default=Status.embedding)
@@ -123,3 +131,26 @@ class Image(AppModelMixin):
 
     class Meta:
         db_table = "image"
+
+
+class File(AppModelMixin):
+    id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
+
+    file_name = models.CharField(max_length=256, verbose_name="文件名称", default="")
+
+    loid = models.IntegerField(verbose_name="loid")
+
+    class Meta:
+        db_table = "file"
+
+    def save(
+            self, bytea=None, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        result = select_one("SELECT lo_from_bytea(%s, %s::bytea) as loid", [0, bytea])
+        self.loid = result['loid']
+        self.file_name = 'speech.mp3'
+        super().save()
+
+    def get_byte(self):
+        result = select_one(f'SELECT lo_get({self.loid}) as "data"', [])
+        return result['data']

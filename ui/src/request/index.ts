@@ -40,8 +40,13 @@ instance.interceptors.response.use(
   (response: any) => {
     if (response.data) {
       if (response.data.code !== 200 && !(response.data instanceof Blob)) {
-        MsgError(response.data.message)
-        return Promise.reject(response.data)
+        if (
+          !response.config.url.includes('/valid') &&
+          !response.config.url.includes('/function_lib/debug')
+        ) {
+          MsgError(response.data.message)
+          return Promise.reject(response.data)
+        }
       }
     }
     return response

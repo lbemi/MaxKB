@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
+import { type Ref } from 'vue'
 import type { User } from '@/api/type/user'
+
 import UserApi from '@/api/user'
+import ThemeApi from '@/api/theme'
+import { useElementPlusTheme } from 'use-element-plus-theme'
 
 export interface userStateTypes {
   userType: number // 1 系统操作者 2 对话用户
@@ -8,6 +12,9 @@ export interface userStateTypes {
   token: any
   version?: string
   accessToken?: string
+  XPACK_LICENSE_IS_VALID: false
+  isXPack: false
+  themeInfo: any
 }
 
 const useUserStore = defineStore({
@@ -16,9 +23,29 @@ const useUserStore = defineStore({
     userType: 1,
     userInfo: null,
     token: '',
-    version: ''
+    version: '',
+    XPACK_LICENSE_IS_VALID: false,
+    isXPack: false,
+    themeInfo: null
   }),
   actions: {
+    showXpack() {
+      return this.isXPack
+    },
+    isDefaultTheme() {
+      return !this.themeInfo?.theme || this.themeInfo?.theme === '#3370FF'
+    },
+    setTheme(data: any) {
+      const { changeTheme } = useElementPlusTheme(this.themeInfo?.theme)
+      changeTheme(data?.['theme'])
+      this.themeInfo = data
+    },
+    isExpire() {
+      return this.isXPack && !this.XPACK_LICENSE_IS_VALID
+    },
+    isEnterprise() {
+      return this.isXPack && this.XPACK_LICENSE_IS_VALID
+    },
     getToken(): String | null {
       if (this.token) {
         return this.token
@@ -35,7 +62,9 @@ const useUserStore = defineStore({
 
     getPermissions() {
       if (this.userInfo) {
-        return this.userInfo?.permissions
+        return this.isXPack && this.XPACK_LICENSE_IS_VALID
+          ? [...this.userInfo?.permissions, 'x-pack']
+          : this.userInfo?.permissions
       } else {
         return []
       }
@@ -51,21 +80,45 @@ const useUserStore = defineStore({
       this.userType = num
     },
 
-    async asyncGetVersion() {
-      return UserApi.getVersion().then((ok) => {
-        this.version = ok.data?.version || '-'
+    async asyncGetProfile() {
+      return new Promise((resolve, reject) => {
+        UserApi.getProfile()
+          .then(async (ok) => {
+            this.version = ok.data?.version || '-'
+            this.isXPack = ok.data?.IS_XPACK
+            this.XPACK_LICENSE_IS_VALID = ok.data?.XPACK_LICENSE_IS_VALID
+
+            if (this.isEnterprise()) {
+              await this.theme()
+            }
+            resolve(ok)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+
+    async theme(loading?: Ref<boolean>) {
+      return await ThemeApi.getThemeInfo(loading).then((ok) => {
+        this.setTheme(ok.data)
+        // window.document.title = this.themeInfo['title'] || 'MaxKB'
+        // const link = document.querySelector('link[rel="icon"]') as any
+        // if (link) {
+        //   link['href'] = this.themeInfo['icon'] || '/favicon.ico'
+        // }
       })
     },
 
     async profile() {
-      return UserApi.profile().then((ok) => {
+      return UserApi.profile().then(async (ok) => {
         this.userInfo = ok.data
-        this.asyncGetVersion()
+        return this.asyncGetProfile()
       })
     },
 
-    async login(username: string, password: string) {
-      return UserApi.login({ username, password }).then((ok) => {
+    async login(auth_type: string, username: string, password: string) {
+      return UserApi.login(auth_type, { username, password }).then((ok) => {
         this.token = ok.data
         localStorage.setItem('token', ok.data)
         return this.profile()
@@ -76,6 +129,11 @@ const useUserStore = defineStore({
       return UserApi.logout().then(() => {
         localStorage.removeItem('token')
         return true
+      })
+    },
+    async getAuthType() {
+      return UserApi.getAuthType().then((ok) => {
+        return ok.data
       })
     }
   }

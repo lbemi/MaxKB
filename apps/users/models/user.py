@@ -63,12 +63,13 @@ def get_user_dynamics_permission(user_id: str):
 
 class User(AppModelMixin):
     id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
-    email = models.EmailField(unique=True, verbose_name="邮箱")
+    email = models.EmailField(unique=True, null=True, blank=True, verbose_name="邮箱")
     phone = models.CharField(max_length=20, verbose_name="电话", default="")
     nick_name = models.CharField(max_length=150, verbose_name="昵称", default="")
     username = models.CharField(max_length=150, unique=True, verbose_name="用户名")
     password = models.CharField(max_length=150, verbose_name="密码")
     role = models.CharField(max_length=150, verbose_name="角色")
+    source = models.CharField(max_length=10, verbose_name="来源", default="LOCAL")
     is_active = models.BooleanField(default=True)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True, null=True)
     update_time = models.DateTimeField(verbose_name="修改时间", auto_now=True, null=True)

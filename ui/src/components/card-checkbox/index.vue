@@ -12,13 +12,14 @@
             <img src="@/assets/icon_web.svg" style="width: 58%" alt="" />
           </AppAvatar>
 
-          <AppAvatar v-else class="mr-12" shape="square" :size="32">
+          <AppAvatar v-else class="mr-12 avatar-blue" shape="square" :size="32">
             <img src="@/assets/icon_document.svg" style="width: 58%" alt="" />
           </AppAvatar>
         </slot>
         <slot></slot>
       </div>
-      <el-checkbox v-bind:modelValue="modelValue.includes(toModelValue)"> </el-checkbox>
+      <el-checkbox v-bind:modelValue="modelValue.includes(toModelValue)" @change="checkboxChange">
+      </el-checkbox>
     </div>
   </el-card>
 </template>
@@ -40,7 +41,7 @@ const toModelValue = computed(() => (props.valueField ? props.data[props.valueFi
 //   set: (val) => val
 // })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'change'])
 
 const checked = () => {
   const value = props.modelValue ? props.modelValue : []
@@ -52,6 +53,11 @@ const checked = () => {
   } else {
     emit('update:modelValue', [...value, toModelValue.value])
   }
+  checkboxChange()
+}
+
+function checkboxChange() {
+  emit('change')
 }
 </script>
 <style lang="scss" scoped>

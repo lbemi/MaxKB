@@ -15,6 +15,7 @@ from functools import reduce
 from typing import List, Dict
 
 import xlwt
+from celery_once import AlreadyQueued
 from django.core import validators
 from django.db import transaction
 from django.db.models import QuerySet
@@ -25,7 +26,6 @@ from xlwt import Utils
 
 from common.db.search import native_search, native_page_search
 from common.event.common import work_thread_pool
-from common.event.listener_manage import ListenerManagement, SyncWebDocumentArgs, UpdateEmbeddingDatasetIdArgs
 from common.exception.app_exception import AppApiException
 from common.handle.impl.doc_split_handle import DocSplitHandle
 from common.handle.impl.html_split_handle import HTMLSplitHandle
@@ -41,8 +41,12 @@ from common.util.file_util import get_file_content
 from common.util.fork import Fork
 from common.util.split_model import get_split_model
 from dataset.models.data_set import DataSet, Document, Paragraph, Problem, Type, Status, ProblemParagraphMapping, Image
-from dataset.serializers.common_serializers import BatchSerializer, MetaSerializer
+from dataset.serializers.common_serializers import BatchSerializer, MetaSerializer, ProblemParagraphManage, \
+    get_embedding_model_by_dataset_id, get_embedding_model_id_by_dataset_id
 from dataset.serializers.paragraph_serializers import ParagraphSerializers, ParagraphInstanceSerializer
+from dataset.task import sync_web_document
+from embedding.task.embedding import embedding_by_document, delete_embedding_by_document_list, \
+    delete_embedding_by_document, update_embedding_dataset_id
 from smartdoc.conf import PROJECT_DIR
 
 parse_qa_handle_list = [XlsParseQAHandle(), CsvParseQAHandle(), XlsxParseQAHandle()]
@@ -234,12 +238,15 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                                      meta={})
             else:
                 document_list.update(dataset_id=target_dataset_id)
-            # 修改向量信息
-            ListenerManagement.update_embedding_dataset_id(UpdateEmbeddingDatasetIdArgs(
-                [paragraph.id for paragraph in paragraph_list],
-                target_dataset_id))
+            model_id = None
+            if dataset.embedding_mode_id != target_dataset.embedding_mode_id:
+                model_id = get_embedding_model_id_by_dataset_id(target_dataset_id)
+
+            pid_list = [paragraph.id for paragraph in paragraph_list]
             # 修改段落信息
             paragraph_list.update(dataset_id=target_dataset_id)
+            # 修改向量信息
+            update_embedding_dataset_id(pid_list, target_dataset_id, model_id)
 
         @staticmethod
         def get_target_dataset_problem(target_dataset_id: str,
@@ -359,7 +366,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             if document.type != Type.web:
                 return True
             try:
-                document.status = Status.embedding
+                document.status = Status.queue_up
                 document.save()
                 source_url = document.meta.get('source_url')
                 selector_list = document.meta.get('selector').split(
@@ -371,7 +378,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                     # 删除问题
                     QuerySet(model=ProblemParagraphMapping).filter(document_id=document_id).delete()
                     # 删除向量库
-                    ListenerManagement.delete_embedding_by_document_signal.send(document_id)
+                    delete_embedding_by_document(document_id)
                     paragraphs = get_split_model('web.md').parse(result.content)
                     document.char_length = reduce(lambda x, y: x + y,
                                                   [len(p.get('content')) for p in paragraphs],
@@ -380,8 +387,9 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                     document_paragraph_model = DocumentSerializers.Create.get_paragraph_model(document, paragraphs)
 
                     paragraph_model_list = document_paragraph_model.get('paragraph_model_list')
-                    problem_model_list = document_paragraph_model.get('problem_model_list')
-                    problem_paragraph_mapping_list = document_paragraph_model.get('problem_paragraph_mapping_list')
+                    problem_paragraph_object_list = document_paragraph_model.get('problem_paragraph_object_list')
+                    problem_model_list, problem_paragraph_mapping_list = ProblemParagraphManage(
+                        problem_paragraph_object_list, document.dataset_id).to_problem_model_list()
                     # 批量插入段落
                     QuerySet(Paragraph).bulk_create(paragraph_model_list) if len(paragraph_model_list) > 0 else None
                     # 批量插入问题
@@ -391,7 +399,8 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                         problem_paragraph_mapping_list) > 0 else None
                     # 向量化
                     if with_embedding:
-                        ListenerManagement.embedding_by_document_signal.send(document_id)
+                        embedding_model_id = get_embedding_model_id_by_dataset_id(document.dataset_id)
+                        embedding_by_document.delay(document_id, embedding_model_id)
                 else:
                     document.status = Status.error
                     document.save()
@@ -404,6 +413,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
     class Operate(ApiMixin, serializers.Serializer):
         document_id = serializers.UUIDField(required=True, error_messages=ErrMessage.char(
             "文档id"))
+        dataset_id = serializers.UUIDField(required=True, error_messages=ErrMessage.char("数据集id"))
 
         @staticmethod
         def get_request_params_api():
@@ -529,7 +539,13 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             if with_valid:
                 self.is_valid(raise_exception=True)
             document_id = self.data.get("document_id")
-            ListenerManagement.embedding_by_document_signal.send(document_id)
+            QuerySet(Document).filter(id=document_id).update(**{'status': Status.queue_up})
+            QuerySet(Paragraph).filter(document_id=document_id).update(**{'status': Status.queue_up})
+            embedding_model_id = get_embedding_model_id_by_dataset_id(dataset_id=self.data.get('dataset_id'))
+            try:
+                embedding_by_document.delay(document_id, embedding_model_id)
+            except AlreadyQueued as e:
+                raise AppApiException(500, "任务正在执行中,请勿重复下发")
 
         @transaction.atomic
         def delete(self):
@@ -540,7 +556,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             # 删除问题
             QuerySet(model=ProblemParagraphMapping).filter(document_id=document_id).delete()
             # 删除向量库
-            ListenerManagement.delete_embedding_by_document_signal.send(document_id)
+            delete_embedding_by_document(document_id)
             return True
 
         @staticmethod
@@ -598,8 +614,9 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             return True
 
         @staticmethod
-        def post_embedding(result, document_id):
-            ListenerManagement.embedding_by_document_signal.send(document_id)
+        def post_embedding(result, document_id, dataset_id):
+            model_id = get_embedding_model_id_by_dataset_id(dataset_id)
+            embedding_by_document.delay(document_id, model_id)
             return result
 
         @staticmethod
@@ -626,11 +643,13 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                 self.is_valid(raise_exception=True)
             dataset_id = self.data.get('dataset_id')
             document_paragraph_model = self.get_document_paragraph_model(dataset_id, instance)
+
             document_model = document_paragraph_model.get('document')
             paragraph_model_list = document_paragraph_model.get('paragraph_model_list')
-            problem_model_list = document_paragraph_model.get('problem_model_list')
-            problem_paragraph_mapping_list = document_paragraph_model.get('problem_paragraph_mapping_list')
-
+            problem_paragraph_object_list = document_paragraph_model.get('problem_paragraph_object_list')
+            problem_model_list, problem_paragraph_mapping_list = (ProblemParagraphManage(problem_paragraph_object_list,
+                                                                                         dataset_id)
+                                                                  .to_problem_model_list())
             # 插入文档
             document_model.save()
             # 批量插入段落
@@ -643,29 +662,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             document_id = str(document_model.id)
             return DocumentSerializers.Operate(
                 data={'dataset_id': dataset_id, 'document_id': document_id}).one(
-                with_valid=True), document_id
-
-        @staticmethod
-        def get_sync_handler(dataset_id):
-            def handler(source_url: str, selector, response: Fork.Response):
-                if response.status == 200:
-                    try:
-                        paragraphs = get_split_model('web.md').parse(response.content)
-                        # 插入
-                        DocumentSerializers.Create(data={'dataset_id': dataset_id}).save(
-                            {'name': source_url, 'paragraphs': paragraphs,
-                             'meta': {'source_url': source_url, 'selector': selector},
-                             'type': Type.web}, with_valid=True)
-                    except Exception as e:
-                        logging.getLogger("max_kb_error").error(f'{str(e)}:{traceback.format_exc()}')
-                else:
-                    Document(name=source_url,
-                             meta={'source_url': source_url, 'selector': selector},
-                             type=Type.web,
-                             char_length=0,
-                             status=Status.error).save()
-
-            return handler
+                with_valid=True), document_id, dataset_id
 
         def save_web(self, instance: Dict, with_valid=True):
             if with_valid:
@@ -674,8 +671,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             dataset_id = self.data.get('dataset_id')
             source_url_list = instance.get('source_url_list')
             selector = instance.get('selector')
-            args = SyncWebDocumentArgs(source_url_list, selector, self.get_sync_handler(dataset_id))
-            ListenerManagement.sync_web_document_signal.send(args)
+            sync_web_document.delay(dataset_id, source_url_list, selector)
 
         @staticmethod
         def get_paragraph_model(document_model, paragraph_list: List):
@@ -685,35 +681,15 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                 dataset_id, document_model.id, paragraph) for paragraph in paragraph_list]
 
             paragraph_model_list = []
-            problem_model_list = []
-            problem_paragraph_mapping_list = []
+            problem_paragraph_object_list = []
             for paragraphs in paragraph_model_dict_list:
                 paragraph = paragraphs.get('paragraph')
-                for problem_model in paragraphs.get('problem_model_list'):
-                    problem_model_list.append(problem_model)
-                for problem_paragraph_mapping in paragraphs.get('problem_paragraph_mapping_list'):
-                    problem_paragraph_mapping_list.append(problem_paragraph_mapping)
+                for problem_model in paragraphs.get('problem_paragraph_object_list'):
+                    problem_paragraph_object_list.append(problem_model)
                 paragraph_model_list.append(paragraph)
 
-            problem_model_list, problem_paragraph_mapping_list = DocumentSerializers.Create.reset_problem_model(
-                problem_model_list, problem_paragraph_mapping_list)
-
             return {'document': document_model, 'paragraph_model_list': paragraph_model_list,
-                    'problem_model_list': problem_model_list,
-                    'problem_paragraph_mapping_list': problem_paragraph_mapping_list}
-
-        @staticmethod
-        def reset_problem_model(problem_model_list, problem_paragraph_mapping_list):
-            new_problem_model_list = [x for i, x in enumerate(problem_model_list) if
-                                      len([item for item in problem_model_list[:i] if item.content == x.content]) <= 0]
-
-            for new_problem_model in new_problem_model_list:
-                old_model_list = [problem.id for problem in problem_model_list if
-                                  problem.content == new_problem_model.content]
-                for problem_paragraph_mapping in problem_paragraph_mapping_list:
-                    if old_model_list.__contains__(problem_paragraph_mapping.problem_id):
-                        problem_paragraph_mapping.problem_id = new_problem_model.id
-            return new_problem_model_list, problem_paragraph_mapping_list
+                    'problem_paragraph_object_list': problem_paragraph_object_list}
 
         @staticmethod
         def get_document_paragraph_model(dataset_id, instance: Dict):
@@ -795,7 +771,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             file_list = self.data.get("file")
             return list(
                 map(lambda f: file_to_paragraph(f, self.data.get("patterns", None), self.data.get("with_filter", None),
-                                                self.data.get("limit", None)), file_list))
+                                                self.data.get("limit", 4096)), file_list))
 
     class SplitPattern(ApiMixin, serializers.Serializer):
         @staticmethod
@@ -807,7 +783,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                     {'key': '#####', 'value': "(?<=\\n)(?<!#)##### (?!#).*|(?<=^)(?<!#)##### (?!#).*"},
                     {'key': '######', 'value': "(?<=\\n)(?<!#)###### (?!#).*|(?<=^)(?<!#)###### (?!#).*"},
                     {'key': '-', 'value': '(?<! )- .*'},
-                    {'key': '空格', 'value': '(?<!\\s)\\s(?!\\s)'},
+                    {'key': '空格', 'value': '(?<! ) (?! )'},
                     {'key': '分号', 'value': '(?<!；)；(?!；)'}, {'key': '逗号', 'value': '(?<!，)，(?!，)'},
                     {'key': '句号', 'value': '(?<!。)。(?!。)'}, {'key': '回车', 'value': '(?<!\\n)\\n(?!\\n)'},
                     {'key': '空行', 'value': '(?<!\\n)\\n\\n(?!\\n)'}]
@@ -820,9 +796,10 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             return openapi.Schema(type=openapi.TYPE_ARRAY, items=DocumentSerializers.Create.get_request_body_api())
 
         @staticmethod
-        def post_embedding(document_list):
+        def post_embedding(document_list, dataset_id):
             for document_dict in document_list:
-                ListenerManagement.embedding_by_document_signal.send(document_dict.get('id'))
+                model_id = get_embedding_model_id_by_dataset_id(dataset_id)
+                embedding_by_document.delay(document_dict.get('id'), model_id)
             return document_list
 
         @post(post_function=post_embedding)
@@ -834,8 +811,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             dataset_id = self.data.get("dataset_id")
             document_model_list = []
             paragraph_model_list = []
-            problem_model_list = []
-            problem_paragraph_mapping_list = []
+            problem_paragraph_object_list = []
             # 插入文档
             for document in instance_list:
                 document_paragraph_dict_model = DocumentSerializers.Create.get_document_paragraph_model(dataset_id,
@@ -843,11 +819,12 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                 document_model_list.append(document_paragraph_dict_model.get('document'))
                 for paragraph in document_paragraph_dict_model.get('paragraph_model_list'):
                     paragraph_model_list.append(paragraph)
-                for problem in document_paragraph_dict_model.get('problem_model_list'):
-                    problem_model_list.append(problem)
-                for problem_paragraph_mapping in document_paragraph_dict_model.get('problem_paragraph_mapping_list'):
-                    problem_paragraph_mapping_list.append(problem_paragraph_mapping)
+                for problem_paragraph_object in document_paragraph_dict_model.get('problem_paragraph_object_list'):
+                    problem_paragraph_object_list.append(problem_paragraph_object)
 
+            problem_model_list, problem_paragraph_mapping_list = (ProblemParagraphManage(problem_paragraph_object_list,
+                                                                                         dataset_id)
+                                                                  .to_problem_model_list())
             # 插入文档
             QuerySet(Document).bulk_create(document_model_list) if len(document_model_list) > 0 else None
             # 批量插入段落
@@ -863,7 +840,8 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                 return [],
             query_set = query_set.filter(**{'id__in': [d.id for d in document_model_list]})
             return native_search(query_set, select_string=get_file_content(
-                os.path.join(PROJECT_DIR, "apps", "dataset", 'sql', 'list_document.sql')), with_search_one=False),
+                os.path.join(PROJECT_DIR, "apps", "dataset", 'sql', 'list_document.sql')),
+                                 with_search_one=False), dataset_id
 
         @staticmethod
         def _batch_sync(document_id_list: List[str]):
@@ -889,7 +867,7 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             QuerySet(Paragraph).filter(document_id__in=document_id_list).delete()
             QuerySet(ProblemParagraphMapping).filter(document_id__in=document_id_list).delete()
             # 删除向量库
-            ListenerManagement.delete_embedding_by_document_list_signal.send(document_id_list)
+            delete_embedding_by_document_list(document_id_list)
             return True
 
         def batch_edit_hit_handling(self, instance: Dict, with_valid=True):

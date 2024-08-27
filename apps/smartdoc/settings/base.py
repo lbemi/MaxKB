@@ -3,13 +3,15 @@ import mimetypes
 import os
 from pathlib import Path
 
+from PIL import Image
+
 from ..const import CONFIG, PROJECT_DIR
 
 mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+Image.MAX_IMAGE_PIXELS = 20000000000
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -39,7 +41,10 @@ INSTALLED_APPS = [
     'rest_framework',
     "drf_yasg",  # swagger 接口
     'django_filters',  # 条件过滤
-    'django_apscheduler'
+    'django_apscheduler',
+    'common',
+    'function_lib',
+    'django_celery_beat'
 
 ]
 
@@ -58,6 +63,7 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=60 * 60 * 2)
 }
 
+APPS_DIR = os.path.join(PROJECT_DIR, 'apps')
 ROOT_URLCONF = 'smartdoc.urls'
 # FORCE_SCRIPT_NAME
 TEMPLATES = [
@@ -93,9 +99,16 @@ SWAGGER_SETTINGS = {
 CACHES = {
     "default": {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 60 * 30,
+        'OPTIONS': {
+            'MAX_ENTRIES': 150,
+            'CULL_FREQUENCY': 5,
+        }
     },
-    'model_cache': {
-        'BACKEND': 'common.cache.mem_cache.MemCache'
+    'chat_cache': {
+        'BACKEND': 'common.cache.file_cache.FileCache',
+        'LOCATION': os.path.join(PROJECT_DIR, 'data', 'cache', "chat_cache")  # 文件夹路径
     },
     # 存储用户信息
     'user_cache': {
@@ -106,11 +119,7 @@ CACHES = {
     # 存储用户Token
     "token_cache": {
         'BACKEND': 'common.cache.file_cache.FileCache',
-        # 文件夹路径
-        'LOCATION': os.path.join(PROJECT_DIR, 'data', 'cache', "token_cache")
-    },
-    "chat_cache": {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': os.path.join(PROJECT_DIR, 'data', 'cache', "token_cache")  # 文件夹路径
     }
 }
 

@@ -21,7 +21,7 @@
         <el-input
           v-model="form.content"
           placeholder="请输入内容"
-          maxlength="4096"
+          maxlength="100000"
           show-word-limit
           :rows="8"
           type="textarea"
@@ -57,7 +57,7 @@
               </AppAvatar>
               <AppAvatar
                 v-else-if="!item.dataset_id && item.type === '0'"
-                class="mr-12"
+                class="mr-12 avatar-blue"
                 shape="square"
                 :size="24"
               >

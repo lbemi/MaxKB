@@ -1,8 +1,26 @@
 <template>
-  <div class="chat" v-loading="loading">
-    <div class="chat__header">
-      <div class="chat-width">
-        <h2 class="ml-24">{{ applicationDetail?.name }}</h2>
+  <div class="chat layout-bg" v-loading="loading">
+    <div class="chat__header" :class="!isDefaultTheme ? 'custom-header' : ''">
+      <div class="chat-width flex align-center">
+        <div class="mr-12 ml-24 flex">
+          <AppAvatar
+            v-if="isAppIcon(applicationDetail?.icon)"
+            shape="square"
+            :size="32"
+            style="background: none"
+          >
+            <img :src="applicationDetail?.icon" alt="" />
+          </AppAvatar>
+          <AppAvatar
+            v-else-if="applicationDetail?.name"
+            :name="applicationDetail?.name"
+            pinyinColor
+            shape="square"
+            :size="32"
+          />
+        </div>
+
+        <h2>{{ applicationDetail?.name }}</h2>
       </div>
     </div>
     <div class="chat__main chat-width">
@@ -16,9 +34,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import applicationApi from '@/api/application'
+import { isAppIcon } from '@/utils/application'
 import useStore from '@/stores'
 const route = useRoute()
 const {
@@ -26,6 +44,10 @@ const {
 } = route as any
 
 const { application, user } = useStore()
+
+const isDefaultTheme = computed(() => {
+  return user.isDefaultTheme()
+})
 
 const loading = ref(false)
 const applicationDetail = ref<any>({})
@@ -35,16 +57,16 @@ function getAccessToken(token: string) {
   application
     .asyncAppAuthentication(token, loading)
     .then(() => {
-      getProfile()
+      getAppProfile()
     })
     .catch(() => {
       applicationAvailable.value = false
     })
 }
-function getProfile() {
-  applicationApi
-    .getProfile(loading)
-    .then((res) => {
+function getAppProfile() {
+  application
+    .asyncGetAppProfile(loading)
+    .then((res: any) => {
       applicationDetail.value = res.data
     })
     .catch(() => {
@@ -59,7 +81,6 @@ onMounted(() => {
 </script>
 <style lang="scss">
 .chat {
-  background-color: var(--app-layout-bg-color);
   overflow: hidden;
   &__header {
     background: var(--app-header-bg-color);

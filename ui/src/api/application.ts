@@ -3,7 +3,7 @@ import { get, post, postStream, del, put } from '@/request/index'
 import type { pageRequest } from '@/api/type/common'
 import type { ApplicationFormType } from '@/api/type/application'
 import { type Ref } from 'vue'
-
+import type { FormField } from '@/components/dynamics-form/type'
 const prefix = '/application'
 
 /**
@@ -17,12 +17,12 @@ const getAllAppilcation: () => Promise<Result<any[]>> = () => {
 /**
  * 获取分页应用
  * page {
-          "current_page": "string",
-          "page_size": "string",
-        }
+ "current_page": "string",
+ "page_size": "string",
+ }
  * param {
-          "name": "string",
-        }
+ "name": "string",
+ }
  */
 const getApplication: (
   page: pageRequest,
@@ -45,8 +45,7 @@ const postApplication: (
 
 /**
  * 修改应用
- * @param 参数 
-
+ * @param 参数
  */
 const putApplication: (
   application_id: String,
@@ -117,10 +116,10 @@ const putAccessToken: (
 
 /**
  * 应用认证
- * @param 参数 
+ * @param 参数
  {
-  "access_token": "string"
-}
+ "access_token": "string"
+ }
  */
 const postAppAuthentication: (access_token: string, loading?: Ref<boolean>) => Promise<any> = (
   access_token,
@@ -131,35 +130,45 @@ const postAppAuthentication: (access_token: string, loading?: Ref<boolean>) => P
 
 /**
  * 对话获取应用相关信息
- * @param 参数 
+ * @param 参数
  {
-  "access_token": "string"
-}
+ "access_token": "string"
+ }
  */
-const getProfile: (loading?: Ref<boolean>) => Promise<any> = (loading) => {
+const getAppProfile: (loading?: Ref<boolean>) => Promise<any> = (loading) => {
   return get(`${prefix}/profile`, undefined, loading)
 }
 
 /**
  * 获得临时回话Id
- * @param 参数 
+ * @param 参数
 
-}
+ }
  */
 const postChatOpen: (data: ApplicationFormType) => Promise<Result<any>> = (data) => {
   return post(`${prefix}/chat/open`, data)
 }
 
 /**
- * 正式回话Id
- * @param 参数 
- * {
-  "model_id": "string",
-  "multiple_rounds_dialogue": true,
-  "dataset_id_list": [
-    "string"
-  ]
+ * 获得工作流临时回话Id
+ * @param 参数
+
+ }
+ */
+const postWorkflowChatOpen: (data: ApplicationFormType) => Promise<Result<any>> = (data) => {
+  return post(`${prefix}/chat_workflow/open`, data)
 }
+
+/**
+ * 正式回话Id
+ * @param 参数
+ * {
+ "model_id": "string",
+ "multiple_rounds_dialogue": true,
+ "dataset_id_list": [
+ "string"
+ ]
+ }
  */
 const getChatOpen: (application_id: String) => Promise<Result<any>> = (application_id) => {
   return get(`${prefix}/${application_id}/chat/open`)
@@ -176,11 +185,11 @@ const postChatMessage: (chat_id: string, data: any) => Promise<any> = (chat_id, 
 
 /**
  * 点赞、点踩
- * @param 参数 
+ * @param 参数
  * application_id : string; chat_id : string; chat_record_id : string
  * {
-    "vote_status": "string", // -1 0 1
-  }
+ "vote_status": "string", // -1 0 1
+ }
  */
 const putChatVote: (
   application_id: string,
@@ -228,6 +237,57 @@ const getApplicationModel: (
   return get(`${prefix}/${application_id}/model`, loading)
 }
 
+/**
+ * 发布应用
+ * @param 参数
+ */
+const putPublishApplication: (
+  application_id: String,
+  data: ApplicationFormType,
+  loading?: Ref<boolean>
+) => Promise<Result<any>> = (application_id, data, loading) => {
+  return put(`${prefix}/${application_id}/publish`, data, undefined, loading)
+}
+/**
+ * 获取应用所属的函数库列表
+ * @param application_id 应用id
+ * @param loading
+ * @returns
+ */
+const listFunctionLib: (application_id: String, loading?: Ref<boolean>) => Promise<Result<any>> = (
+  application_id,
+  loading
+) => {
+  return get(`${prefix}/${application_id}/function_lib`, undefined, loading)
+}
+/**
+ * 获取应用所属的函数库
+ * @param application_id
+ * @param function_lib_id
+ * @param loading
+ * @returns
+ */
+const getFunctionLib: (
+  application_id: String,
+  function_lib_id: String,
+  loading?: Ref<boolean>
+) => Promise<Result<any>> = (application_id, function_lib_id, loading) => {
+  return get(`${prefix}/${application_id}/function_lib/${function_lib_id}`, undefined, loading)
+}
+/**
+ * 获取模型参数表单
+ * @param application_id 应用id
+ * @param model_id      模型id
+ * @param loading
+ * @returns
+ */
+const getModelParamsForm: (
+  application_id: String,
+  model_id: String,
+  loading?: Ref<boolean>
+) => Promise<Result<Array<FormField>>> = (application_id, model_id, loading) => {
+  return get(`${prefix}/${application_id}/model_params_form/${model_id}`, undefined, loading)
+}
 export default {
   getAllAppilcation,
   getApplication,
@@ -242,8 +302,13 @@ export default {
   getAccessToken,
   putAccessToken,
   postAppAuthentication,
-  getProfile,
+  getAppProfile,
   putChatVote,
   getApplicationHitTest,
-  getApplicationModel
+  getApplicationModel,
+  putPublishApplication,
+  postWorkflowChatOpen,
+  listFunctionLib,
+  getFunctionLib,
+  getModelParamsForm
 }

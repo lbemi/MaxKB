@@ -56,6 +56,7 @@
                         v-model="filter.min_star"
                         :min="0"
                         :step="1"
+                        :value-on-clear="0"
                         controls-position="right"
                         style="width: 100px"
                         size="small"
@@ -70,6 +71,7 @@
                         v-model="filter.min_trample"
                         :min="0"
                         :step="1"
+                        :value-on-clear="0"
                         controls-position="right"
                         style="width: 100px"
                         size="small"
@@ -348,7 +350,9 @@ onMounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-.log-table tr {
-  cursor: pointer;
+.log-table {
+  :deep(tr) {
+    cursor: pointer;
+  }
 }
 </style>

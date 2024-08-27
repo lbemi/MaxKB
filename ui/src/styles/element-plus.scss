@@ -1,11 +1,10 @@
 :root {
   --el-color-primary: #3370ff;
-  --el-color-primary-light-9: rgba(51, 112, 255, 0.1);
   --el-menu-item-height: 45px;
   --el-box-shadow-light: 0px 2px 4px 0px rgba(31, 35, 41, 0.12);
   --el-border-color: #dee0e3;
   --el-text-color-regular: #1f2329;
-  --el-color-info: #8f959e;
+  --el-color-info: #8f959e !important;
 }
 
 .el-button {
@@ -223,7 +222,7 @@
   margin-right: calc(var(--app-base-px) + 4px);
 }
 .el-slider__input {
-  width: 60px;
+  width: 72px;
 }
 
 .input-with-select {
@@ -360,4 +359,32 @@
     margin-top: -8px;
     line-height: 30px;
   }
+}
+
+// 提示横幅
+.el-alert__title {
+  color: var(--el-text-color-regular) !important;
+  font-weight: 400;
+}
+.el-alert--warning.is-light {
+  background-color: #ffe7cc;
+  .el-alert__icon {
+    color: #ff8800;
+  }
+}
+.el-alert--success.is-light {
+  background-color: #d6f4d3;
+  .el-alert__icon {
+    color: #34c724;
+  }
+}
+.el-alert--danger.is-light {
+  background-color: #fddbda;
+  .el-alert__icon {
+    color: #f54a45;
+  }
+}
+
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: var(--el-checkbox-text-color);
 }

@@ -12,13 +12,15 @@ export default {
         MenuItem: {
             application: "应用",
             dataset: "知识库",
-            setting: "系统设置"
+            setting: "系统管理"
         },
         avatar: {
             resetPassword: "修改密码",
             about: "关于",
             logout: "退出",
             version:"版本号",
+            apiKey: "API Key 管理",
+            apiServiceAddress: "API 服务地址",
             dialog:{
                 newPassword:"新密码",
                 enterPassword: "请输入修改密码",

@@ -11,8 +11,8 @@
           <p class="title p-16 bold">
             {{ $t('views.applicationOverview.appInfo.EmbedDialog.fullscreenModeTitle') }}
           </p>
-          <img src="@/assets/window1.png" alt="" class="ml-8" />
-          <div class="code border-t p-16">
+          <img src="@/assets/window1.png" alt="" class="ml-8" height="150" />
+          <div class="code layout-bg border-t p-16">
             <div class="flex-between">
               <span class="bold">{{
                 $t('views.applicationOverview.appInfo.EmbedDialog.copyInstructions')
@@ -32,8 +32,8 @@
           <p class="title p-16 bold">
             {{ $t('views.applicationOverview.appInfo.EmbedDialog.floatingModeTitle') }}
           </p>
-          <img src="@/assets/window2.png" alt="" class="ml-8" />
-          <div class="code border-t p-16">
+          <img src="@/assets/window2.png" alt="" class="ml-8" height="150" />
+          <div class="code layout-bg border-t p-16">
             <div class="flex-between">
               <span class="bold">{{
                 $t('views.applicationOverview.appInfo.EmbedDialog.copyInstructions')
@@ -42,7 +42,7 @@
                 <AppIcon iconName="app-copy"></AppIcon>
               </el-button>
             </div>
-            <div class="mt-8 white-space">
+            <div class="mt-8 pre-wrap">
               {{ source2 }}
             </div>
           </div>
@@ -104,14 +104,11 @@ defineExpose({ open })
 
   .code {
     color: var(--app-text-color) !important;
-    background: var(--app-layout-bg-color);
+
     font-weight: 400;
     font-size: 13px;
     white-space: pre;
     height: 180px;
-    .white-space {
-      white-space: pre-wrap;
-    }
   }
 }
 </style>

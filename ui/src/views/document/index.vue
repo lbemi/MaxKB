@@ -82,7 +82,10 @@
                 <el-icon class="danger"><CircleCloseFilled /></el-icon> 失败
               </el-text>
               <el-text v-else-if="row.status === '0'">
-                <el-icon class="is-loading primary"><Loading /></el-icon> 导入中
+                <el-icon class="is-loading primary"><Loading /></el-icon> 索引中
+              </el-text>
+              <el-text v-else-if="row.status === '3'">
+                <el-icon class="is-loading primary"><Loading /></el-icon> 排队中
               </el-text>
             </template>
           </el-table-column>
@@ -140,7 +143,7 @@
               {{ datetimeFormat(row.update_time) }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="left" width="110">
+          <el-table-column label="操作" align="left" width="110" fixed="right">
             <template #default="{ row }">
               <div v-if="datasetDetail.type === '0'">
                 <span class="mr-4">
@@ -152,7 +155,7 @@
                 </span>
                 <span @click.stop>
                   <el-dropdown trigger="click">
-                    <el-button text>
+                    <el-button text type="primary">
                       <el-icon><MoreFilled /></el-icon>
                     </el-button>
                     <template #dropdown>
@@ -185,7 +188,7 @@
                 </el-tooltip>
                 <span @click.stop>
                   <el-dropdown trigger="click">
-                    <el-button text>
+                    <el-button text type="primary">
                       <el-icon><MoreFilled /></el-icon>
                     </el-button>
                     <template #dropdown>

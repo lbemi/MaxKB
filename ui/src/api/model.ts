@@ -52,6 +52,18 @@ const getModelCreateForm: (
 }
 
 /**
+ * 获取模型参数表单
+ * @param model_id 模型id
+ * @param loading
+ * @returns
+ */
+const getModelParamsForm: (
+  model_id: string,
+  loading?: Ref<boolean>
+) => Promise<Result<Array<FormField>>> = (model_id, loading) => {
+  return get(`model/${model_id}/model_params_form`, {}, loading)
+}
+/**
  * 获取模型类型列表
  * @param provider 供应商
  * @param loading  加载器
@@ -130,7 +142,18 @@ const getModelMetaById: (model_id: string, loading?: Ref<boolean>) => Promise<Re
 ) => {
   return get(`${prefix}/${model_id}/meta`, {}, loading)
 }
-
+/**
+ * 暂停下载
+ * @param model_id 模型id
+ * @param loading 加载器
+ * @returns
+ */
+const pauseDownload: (model_id: string, loading?: Ref<boolean>) => Promise<Result<boolean>> = (
+  model_id,
+  loading
+) => {
+  return put(`${prefix}/${model_id}/pause_download`, undefined, {}, loading)
+}
 const deleteModel: (model_id: string, loading?: Ref<boolean>) => Promise<Result<boolean>> = (
   model_id,
   loading
@@ -147,5 +170,7 @@ export default {
   updateModel,
   deleteModel,
   getModelById,
-  getModelMetaById
+  getModelMetaById,
+  pauseDownload,
+  getModelParamsForm
 }

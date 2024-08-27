@@ -6,30 +6,45 @@
     @date：2023/10/23 16:03
     @desc:
 """
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+import threading
+import time
 
-from smartdoc.const import CONFIG
+from common.cache.mem_cache import MemCache
+
+lock = threading.Lock()
 
 
-class EmbeddingModel:
-    instance = None
+class ModelManage:
+    cache = MemCache('model', {})
+    up_clear_time = time.time()
 
     @staticmethod
-    def get_embedding_model():
-        """
-        获取向量化模型
-        :return:
-        """
-        if EmbeddingModel.instance is None:
-            model_name = CONFIG.get('EMBEDDING_MODEL_NAME')
-            cache_folder = CONFIG.get('EMBEDDING_MODEL_PATH')
-            device = CONFIG.get('EMBEDDING_DEVICE')
-            e = HuggingFaceEmbeddings(
-                model_name=model_name,
-                cache_folder=cache_folder,
-                model_kwargs={'device': device})
-            EmbeddingModel.instance = e
-        return EmbeddingModel.instance
+    def get_model(_id, get_model):
+        # 获取锁
+        lock.acquire()
+        try:
+            model_instance = ModelManage.cache.get(_id)
+            if model_instance is None or not model_instance.is_cache_model():
+                model_instance = get_model(_id)
+                ModelManage.cache.set(_id, model_instance, timeout=60 * 30)
+                return model_instance
+            # 续期
+            ModelManage.cache.touch(_id, timeout=60 * 30)
+            ModelManage.clear_timeout_cache()
+            return model_instance
+        finally:
+            # 释放锁
+            lock.release()
+
+    @staticmethod
+    def clear_timeout_cache():
+        if time.time() - ModelManage.up_clear_time > 60:
+            ModelManage.cache.clear_timeout_data()
+
+    @staticmethod
+    def delete_key(_id):
+        if ModelManage.cache.has_key(_id):
+            ModelManage.cache.delete(_id)
 
 
 class VectorStore:

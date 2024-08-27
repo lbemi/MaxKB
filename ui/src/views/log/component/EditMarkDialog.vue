@@ -30,7 +30,7 @@
             <el-input
               v-model="form.content"
               placeholder="请输入分段内容"
-              maxlength="4096"
+              maxlength="100000"
               show-word-limit
               :rows="15"
               type="textarea"
@@ -38,7 +38,7 @@
             </el-input>
           </el-form-item>
         </el-form>
-        <span v-else class="pre-line">{{ form?.content }}</span>
+        <span v-else class="pre-wrap">{{ form?.content }}</span>
       </div>
     </el-scrollbar>
 
@@ -141,4 +141,13 @@ const submit = async (formEl: FormInstance) => {
 
 defineExpose({ open })
 </script>
-<style lang="scss" scope></style>
+<style lang="scss" scope>
+.edit-mark-dialog {
+  .el-dialog__header.show-close {
+    padding-right: 15px;
+  }
+  .el-dialog__headerbtn {
+    top: 13px;
+  }
+}
+</style>

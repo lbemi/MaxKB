@@ -25,6 +25,11 @@
         <el-table-column prop="nick_name" label="姓名" />
         <el-table-column prop="email" label="邮箱" show-overflow-tooltip />
         <el-table-column prop="phone" label="手机号" />
+        <el-table-column prop="source" label="用户类型">
+          <template #default="{ row }">
+            {{ row.source === 'LOCAL' ? '系统用户' : row.source }}
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="60">
           <template #default="{ row }">
             <div @click.stop>
@@ -43,7 +48,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="110" align="left">
+        <el-table-column label="操作" width="110" align="left" fixed="right">
           <template #default="{ row }">
             <span class="mr-4">
               <el-tooltip effect="dark" content="编辑" placement="top">
@@ -83,9 +88,13 @@
 import { ref, onMounted, reactive } from 'vue'
 import UserDialog from './component/UserDialog.vue'
 import UserPwdDialog from './component/UserPwdDialog.vue'
-import { MsgSuccess, MsgConfirm } from '@/utils/message'
+import { MsgSuccess, MsgConfirm, MsgAlert } from '@/utils/message'
 import userApi from '@/api/user-manage'
 import { datetimeFormat } from '@/utils/time'
+import useStore from '@/stores'
+import { ValidType, ValidCount } from '@/enums/common'
+
+const { common, user } = useStore()
 
 const UserDialogRef = ref()
 const UserPwdDialogRef = ref()
@@ -127,8 +136,19 @@ function editUser(row: any) {
 }
 
 function createUser() {
-  title.value = '创建用户'
-  UserDialogRef.value.open()
+  if (user.isEnterprise()) {
+    title.value = '创建用户'
+    UserDialogRef.value.open()
+  } else {
+    common.asyncGetValid(ValidType.User, ValidCount.User, loading).then((res: any) => {
+      if (res?.data) {
+        title.value = '创建用户'
+        UserDialogRef.value.open()
+      } else {
+        MsgAlert('提示', '社区版最多支持 2 个用户，如需拥有更多用户，请升级为专业版。')
+      }
+    })
+  }
 }
 
 function deleteUserManage(row: any) {

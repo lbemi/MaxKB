@@ -8,6 +8,7 @@
         require-asterisk-position="right"
         ref="ceFormRef"
         v-model="_data[index]"
+        :model="_data[index]"
         :other-params="other"
         :render_data="render_data()"
         v-bind="attr"
@@ -21,7 +22,7 @@
     </el-card>
     <el-card shadow="never" class="card-add box-card" @click="add_card">
       <div class="flex-center">
-        <AppIcon iconName="Plus" class="add-icon p-8" />
+        <AppIcon iconName="Plus" class="add-icon layout-bg p-8 border-r-4" />
         <span>{{ add_msg }}</span>
       </div>
     </el-card>
@@ -133,9 +134,7 @@ defineExpose({
 
     .add-icon {
       font-size: 14px;
-      border-radius: 4px;
       border: 1px solid var(--app-border-color-dark);
-      background: var(--app-layout-bg-color);
       margin-right: 12px;
     }
     &:hover {

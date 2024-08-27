@@ -1,8 +1,26 @@
 <template>
-  <div class="chat-embed" v-loading="loading" @click="closePopover($event)">
-    <div class="chat-embed__header">
-      <div class="chat-width">
-        <h4 class="ml-24">{{ applicationDetail?.name }}</h4>
+  <div class="chat-embed layout-bg" v-loading="loading">
+    <div class="chat-embed__header" :class="!isDefaultTheme ? 'custom-header' : ''">
+      <div class="chat-width flex align-center">
+        <div class="mr-12 ml-24 flex">
+          <AppAvatar
+            v-if="isAppIcon(applicationDetail?.icon)"
+            shape="square"
+            :size="32"
+            style="background: none"
+          >
+            <img :src="applicationDetail?.icon" alt="" />
+          </AppAvatar>
+          <AppAvatar
+            v-else-if="applicationDetail?.name"
+            :name="applicationDetail?.name"
+            pinyinColor
+            shape="square"
+            :size="32"
+          />
+        </div>
+
+        <h4>{{ applicationDetail?.name }}</h4>
       </div>
     </div>
     <div class="chat-embed__main">
@@ -26,12 +44,16 @@
     </div>
 
     <!-- 历史记录弹出层 -->
-    <div @click.prevent.stop="show = !show" class="chat-popover-button cursor color-secondary">
+    <div
+      v-if="applicationDetail.show_history || !user.isEnterprise()"
+      @click.prevent.stop="show = !show"
+      class="chat-popover-button cursor color-secondary"
+    >
       <AppIcon iconName="app-history-outlined"></AppIcon>
     </div>
 
     <el-collapse-transition>
-      <div v-show="show" class="chat-popover w-full" id="chat-popover">
+      <div v-show="show" class="chat-popover w-full" v-click-outside="clickoutside">
         <div class="border-b p-16-24">
           <span>历史记录</span>
         </div>
@@ -51,7 +73,7 @@
                   <auto-tooltip :content="row.abstract">
                     {{ row.abstract }}
                   </auto-tooltip>
-                  <div @click.stop v-if="mouseId === row.id">
+                  <div @click.stop v-if="mouseId === row.id && row.id !== 'new'">
                     <el-button style="padding: 0" link @click.stop="deleteLog(row)">
                       <el-icon><Delete /></el-icon>
                     </el-button>
@@ -75,9 +97,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, reactive, nextTick } from 'vue'
+import { ref, onMounted, reactive, nextTick, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import applicationApi from '@/api/application'
+import { isAppIcon } from '@/utils/application'
 import useStore from '@/stores'
 const route = useRoute()
 const {
@@ -85,6 +107,10 @@ const {
 } = route as any
 
 const { application, user, log } = useStore()
+
+const isDefaultTheme = computed(() => {
+  return user.isDefaultTheme()
+})
 
 const AiChatRef = ref()
 const loading = ref(false)
@@ -134,13 +160,8 @@ function handleScroll(event: any) {
   }
 }
 
-function closePopover(event: any) {
-  const popover = document.getElementById('chat-popover')
-  if (popover) {
-    if (!popover.contains(event.target)) {
-      show.value = false
-    }
-  }
+function clickoutside() {
+  show.value = false
 }
 
 function newChat() {
@@ -153,18 +174,22 @@ function getAccessToken(token: string) {
   application
     .asyncAppAuthentication(token, loading)
     .then(() => {
-      getProfile()
+      setTimeout(() => {
+        getAppProfile()
+      }, 500)
     })
     .catch(() => {
       applicationAvailable.value = false
     })
 }
-function getProfile() {
-  applicationApi
-    .getProfile(loading)
-    .then((res) => {
+function getAppProfile() {
+  application
+    .asyncGetAppProfile(loading)
+    .then((res: any) => {
       applicationDetail.value = res.data
-      getChatLog(applicationDetail.value.id)
+      if (res.data?.show_history || !user.isEnterprise()) {
+        getChatLog(applicationDetail.value.id)
+      }
     })
     .catch(() => {
       applicationAvailable.value = false
@@ -234,7 +259,6 @@ onMounted(() => {
 </script>
 <style lang="scss">
 .chat-embed {
-  background-color: var(--app-layout-bg-color);
   overflow: hidden;
   &__header {
     background: var(--app-header-bg-color);

@@ -1,7 +1,27 @@
 <template>
-  <div class="chat-pc" :class="classObj" v-loading="loading">
-    <div class="chat-pc__header">
-      <h4 class="ml-24">{{ applicationDetail?.name }}</h4>
+  <div class="chat-pc layout-bg" :class="classObj" v-loading="loading">
+    <div class="chat-pc__header" :class="!isDefaultTheme ? 'custom-header' : ''">
+      <div class="flex align-center">
+        <div class="mr-12 ml-24 flex">
+          <AppAvatar
+            v-if="isAppIcon(applicationDetail?.icon)"
+            shape="square"
+            :size="32"
+            style="background: none"
+          >
+            <img :src="applicationDetail?.icon" alt="" />
+          </AppAvatar>
+          <AppAvatar
+            v-else-if="applicationDetail?.name"
+            :name="applicationDetail?.name"
+            pinyinColor
+            shape="square"
+            :size="32"
+          />
+        </div>
+
+        <h4>{{ applicationDetail?.name }}</h4>
+      </div>
     </div>
     <div class="flex">
       <div class="chat-pc__left border-r">
@@ -31,7 +51,7 @@
                     <auto-tooltip :content="row.abstract">
                       {{ row.abstract }}
                     </auto-tooltip>
-                    <div @click.stop v-if="mouseId === row.id">
+                    <div @click.stop v-if="mouseId === row.id && row.id !== 'new'">
                       <el-button style="padding: 0" link @click.stop="deleteLog(row)">
                         <el-icon><Delete /></el-icon>
                       </el-button>
@@ -108,7 +128,7 @@ import { reactive, ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import { saveAs } from 'file-saver'
-import applicationApi from '@/api/application'
+import { isAppIcon } from '@/utils/application'
 import useStore from '@/stores'
 
 import useResize from '@/layout/hooks/useResize'
@@ -121,6 +141,10 @@ const {
 } = route as any
 
 const { application, user, log, common } = useStore()
+
+const isDefaultTheme = computed(() => {
+  return user.isDefaultTheme()
+})
 
 const isCollapse = ref(false)
 
@@ -189,19 +213,21 @@ function getAccessToken(token: string) {
   application
     .asyncAppAuthentication(token, loading)
     .then(() => {
-      getProfile()
+      getAppProfile()
     })
     .catch(() => {
       applicationAvailable.value = false
     })
 }
 
-function getProfile() {
-  applicationApi
-    .getProfile(loading)
-    .then((res) => {
+function getAppProfile() {
+  application
+    .asyncGetAppProfile(loading)
+    .then((res: any) => {
       applicationDetail.value = res.data
-      getChatLog(applicationDetail.value.id)
+      if (res.data?.show_history || !user.isEnterprise()) {
+        getChatLog(applicationDetail.value.id)
+      }
     })
     .catch(() => {
       applicationAvailable.value = false
@@ -317,7 +343,6 @@ onMounted(() => {
 </script>
 <style lang="scss">
 .chat-pc {
-  background-color: var(--app-layout-bg-color);
   overflow: hidden;
 
   &__header {

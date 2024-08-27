@@ -6,6 +6,7 @@
     :close-on-press-escape="false"
     :destroy-on-close="true"
     :before-close="close"
+    append-to-body
   >
     <template #header="{ close, titleId, titleClass }">
       <el-breadcrumb separator=">">
@@ -49,10 +50,35 @@
           </template>
           <el-input
             v-model="base_form_data.name"
-            maxlength="20"
+            maxlength="64"
             show-word-limit
             placeholder="请给基础模型设置一个名称"
           />
+        </el-form-item>
+        <el-form-item prop="permission_type" :rules="base_form_data_rule.permission_type">
+          <template #label>
+            <span>权限</span>
+          </template>
+          <el-radio-group v-model="base_form_data.permission_type" class="card__radio">
+            <el-row :gutter="16">
+              <template v-for="(value, key) of PermissionType" :key="key">
+                <el-col :span="12">
+                  <el-card
+                    shadow="never"
+                    class="mb-16"
+                    :class="base_form_data.permission_type === key ? 'active' : ''"
+                  >
+                    <el-radio :value="key" size="large">
+                      <p class="mb-4">{{ value }}</p>
+                      <el-text type="info">
+                        {{ PermissionDesc[key] }}
+                      </el-text>
+                    </el-radio>
+                  </el-card>
+                </el-col>
+              </template>
+            </el-row>
+          </el-radio-group>
         </el-form-item>
         <el-form-item prop="model_type" :rules="base_form_data_rule.model_type">
           <template #label>
@@ -73,6 +99,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
+
         <el-form-item prop="model_name" :rules="base_form_data_rule.model_name">
           <template #label>
             <div class="flex align-center" style="display: inline-flex">
@@ -133,7 +160,8 @@ import ModelApi from '@/api/model'
 import type { FormField } from '@/components/dynamics-form/type'
 import DynamicsForm from '@/components/dynamics-form/index.vue'
 import type { FormRules } from 'element-plus'
-import { MsgSuccess } from '@/utils/message'
+import { MsgSuccess, MsgWarning } from '@/utils/message'
+import { PermissionType, PermissionDesc } from '@/enums/model'
 
 const providerValue = ref<Provider>()
 const dynamicsFormRef = ref<InstanceType<typeof DynamicsForm>>()
@@ -149,17 +177,17 @@ const dialogVisible = ref<boolean>(false)
 
 const base_form_data_rule = ref<FormRules>({
   name: { required: true, trigger: 'blur', message: '模型名不能为空' },
+  permission_type: { required: true, trigger: 'change', message: '权限不能为空' },
   model_type: { required: true, trigger: 'change', message: '模型类型不能为空' },
   model_name: { required: true, trigger: 'change', message: '基础模型不能为空' }
 })
 
 const base_form_data = ref<{
   name: string
-
+  permission_type: string
   model_type: string
-
   model_name: string
-}>({ name: '', model_type: '', model_name: '' })
+}>({ name: '', model_type: '', model_name: '', permission_type: 'PRIVATE' })
 
 const credential_form_data = ref<Dict<any>>({})
 
@@ -169,7 +197,8 @@ const form_data = computed({
       ...credential_form_data.value,
       name: base_form_data.value.name,
       model_type: base_form_data.value.model_type,
-      model_name: base_form_data.value.model_name
+      model_name: base_form_data.value.model_name,
+      permission_type: base_form_data.value.permission_type
     }
   },
   set: (event: any) => {
@@ -178,6 +207,11 @@ const form_data = computed({
 })
 
 const getModelForm = (model_name: string) => {
+  if (!form_data.value.model_type) {
+    MsgWarning('请先选择模型类型')
+    base_form_data.value.model_name = ''
+    return
+  }
   if (providerValue.value) {
     ModelApi.getModelCreateForm(
       providerValue.value.provider,
@@ -211,7 +245,7 @@ const list_base_model = (model_type: any) => {
 }
 
 const close = () => {
-  base_form_data.value = { name: '', model_type: '', model_name: '' }
+  base_form_data.value = { name: '', model_type: '', model_name: '', permission_type: 'PRIVATE' }
   credential_form_data.value = {}
   model_form_field.value = []
   base_model_list.value = []

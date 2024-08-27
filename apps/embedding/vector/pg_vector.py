@@ -13,9 +13,8 @@ from abc import ABC, abstractmethod
 from typing import Dict, List
 
 from django.db.models import QuerySet
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_core.embeddings import Embeddings
 
-from common.config.embedding_config import EmbeddingModel
 from common.db.search import generate_sql_by_query_dict
 from common.db.sql_execute import select_list
 from common.util.file_util import get_file_content
@@ -28,18 +27,12 @@ from smartdoc.conf import PROJECT_DIR
 class PGVector(BaseVectorStore):
 
     def delete_by_source_ids(self, source_ids: List[str], source_type: str):
+        if len(source_ids) == 0:
+            return
         QuerySet(Embedding).filter(source_id__in=source_ids, source_type=source_type).delete()
 
     def update_by_source_ids(self, source_ids: List[str], instance: Dict):
         QuerySet(Embedding).filter(source_id__in=source_ids).update(**instance)
-
-    def embed_documents(self, text_list: List[str]):
-        embedding = EmbeddingModel.get_embedding_model()
-        return embedding.embed_documents(text_list)
-
-    def embed_query(self, text: str):
-        embedding = EmbeddingModel.get_embedding_model()
-        return embedding.embed_query(text)
 
     def vector_is_create(self) -> bool:
         # 项目启动默认是创建好的 不需要再创建
@@ -50,7 +43,7 @@ class PGVector(BaseVectorStore):
 
     def _save(self, text, source_type: SourceType, dataset_id: str, document_id: str, paragraph_id: str, source_id: str,
               is_active: bool,
-              embedding: HuggingFaceEmbeddings):
+              embedding: Embeddings):
         text_embedding = embedding.embed_query(text)
         embedding = Embedding(id=uuid.uuid1(),
                               dataset_id=dataset_id,
@@ -64,7 +57,7 @@ class PGVector(BaseVectorStore):
         embedding.save()
         return True
 
-    def _batch_save(self, text_list: List[Dict], embedding: HuggingFaceEmbeddings):
+    def _batch_save(self, text_list: List[Dict], embedding: Embeddings, is_save_function):
         texts = [row.get('text') for row in text_list]
         embeddings = embedding.embed_documents(texts)
         embedding_list = [Embedding(id=uuid.uuid1(),
@@ -76,14 +69,15 @@ class PGVector(BaseVectorStore):
                                     source_type=text_list[index].get('source_type'),
                                     embedding=embeddings[index],
                                     search_vector=to_ts_vector(text_list[index]['text'])) for index in
-                          range(0, len(text_list))]
-        QuerySet(Embedding).bulk_create(embedding_list) if len(embedding_list) > 0 else None
+                          range(0, len(texts))]
+        if is_save_function():
+            QuerySet(Embedding).bulk_create(embedding_list) if len(embedding_list) > 0 else None
         return True
 
     def hit_test(self, query_text, dataset_id_list: list[str], exclude_document_id_list: list[str], top_number: int,
                  similarity: float,
                  search_mode: SearchMode,
-                 embedding: HuggingFaceEmbeddings):
+                 embedding: Embeddings):
         if dataset_id_list is None or len(dataset_id_list) == 0:
             return []
         exclude_dict = {}
@@ -105,9 +99,9 @@ class PGVector(BaseVectorStore):
             return []
         query_set = QuerySet(Embedding).filter(dataset_id__in=dataset_id_list, is_active=is_active)
         if exclude_document_id_list is not None and len(exclude_document_id_list) > 0:
-            exclude_dict.__setitem__('document_id__in', exclude_document_id_list)
+            query_set = query_set.exclude(document_id__in=exclude_document_id_list)
         if exclude_paragraph_list is not None and len(exclude_paragraph_list) > 0:
-            exclude_dict.__setitem__('paragraph_id__in', exclude_paragraph_list)
+            query_set = query_set.exclude(paragraph_id__in=exclude_paragraph_list)
         query_set = query_set.exclude(**exclude_dict)
         for search_handle in search_handle_list:
             if search_handle.support(search_mode):
@@ -132,7 +126,9 @@ class PGVector(BaseVectorStore):
         QuerySet(Embedding).filter(document_id=document_id).delete()
         return True
 
-    def delete_bu_document_id_list(self, document_id_list: List[str]):
+    def delete_by_document_id_list(self, document_id_list: List[str]):
+        if len(document_id_list) == 0:
+            return True
         return QuerySet(Embedding).filter(document_id__in=document_id_list).delete()
 
     def delete_by_source_id(self, source_id: str, source_type: str):

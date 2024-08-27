@@ -18,15 +18,8 @@
               class="mr-12"
               shape="square"
               :size="24"
-              style="flex-shrink: 0"
             />
-            <AppAvatar
-              v-else-if="isDataset"
-              class="mr-12"
-              shape="square"
-              :size="24"
-              style="flex-shrink: 0"
-            >
+            <AppAvatar v-else-if="isDataset" class="mr-12 avatar-blue" shape="square" :size="24">
               <img src="@/assets/icon_document.svg" style="width: 58%" alt="" />
             </AppAvatar>
             <auto-tooltip :content="row?.name">
@@ -35,7 +28,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="管理" align="center" width="60">
+      <el-table-column label="管理" align="center" width="60" fixed="right">
         <!-- <template #header>
         <el-checkbox
           v-model="allChecked[MANAGE]"
@@ -51,7 +44,7 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="使用" align="center" width="60">
+      <el-table-column label="使用" align="center" width="60" fixed="right">
         <!-- <template #header>
         <el-checkbox
           v-model="allChecked[USE]"
