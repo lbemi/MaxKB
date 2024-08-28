@@ -65,8 +65,10 @@ class ChatInfo:
         model_params_setting = None
         if model_id is not None:
             model = QuerySet(Model).filter(id=model_id).first()
-            credential = get_model_credential(model.provider, model.model_type, model.model_name)
-            model_params_setting = credential.get_model_params_setting_form(model.model_name).get_default_form_data()
+            credential = get_model_credential(
+                model.provider, model.model_type, model.model_name)
+            model_params_setting = credential.get_model_params_setting_form(
+                model.model_name).get_default_form_data()
         return {
             'dataset_id_list': self.dataset_id_list,
             'exclude_document_id_list': self.exclude_document_id_list,
@@ -103,7 +105,8 @@ class ChatInfo:
                 'client_type': client_type}
 
     def append_chat_record(self, chat_record: ChatRecord, client_id=None):
-        chat_record.problem_text = chat_record.problem_text[0:1024] if chat_record.problem_text is not None else ""
+        chat_record.problem_text = chat_record.problem_text[0:
+                                                            1024] if chat_record.problem_text is not None else ""
         # 存入缓存中
         self.chat_record_list.append(chat_record)
         if self.application.id is not None:
@@ -147,23 +150,32 @@ def get_post_handler(chat_info: ChatInfo):
 
 
 class ChatMessageSerializer(serializers.Serializer):
-    chat_id = serializers.UUIDField(required=True, error_messages=ErrMessage.char("对话id"))
-    message = serializers.CharField(required=True, error_messages=ErrMessage.char("用户问题"))
-    stream = serializers.BooleanField(required=True, error_messages=ErrMessage.char("是否流式回答"))
-    re_chat = serializers.BooleanField(required=True, error_messages=ErrMessage.char("是否重新回答"))
-    application_id = serializers.UUIDField(required=False, allow_null=True, error_messages=ErrMessage.uuid("应用id"))
-    client_id = serializers.CharField(required=True, error_messages=ErrMessage.char("客户端id"))
-    client_type = serializers.CharField(required=True, error_messages=ErrMessage.char("客户端类型"))
+    chat_id = serializers.UUIDField(
+        required=True, error_messages=ErrMessage.char("对话id"))
+    message = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("用户问题"))
+    stream = serializers.BooleanField(
+        required=True, error_messages=ErrMessage.char("是否流式回答"))
+    re_chat = serializers.BooleanField(
+        required=True, error_messages=ErrMessage.char("是否重新回答"))
+    application_id = serializers.UUIDField(
+        required=False, allow_null=True, error_messages=ErrMessage.uuid("应用id"))
+    client_id = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("客户端id"))
+    client_type = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("客户端类型"))
 
     def is_valid_application_workflow(self, *, raise_exception=False):
         self.is_valid_intraday_access_num()
 
     def is_valid_intraday_access_num(self):
         if self.data.get('client_type') == AuthenticationType.APPLICATION_ACCESS_TOKEN.value:
-            access_client = QuerySet(ApplicationPublicAccessClient).filter(id=self.data.get('client_id')).first()
+            access_client = QuerySet(ApplicationPublicAccessClient).filter(
+                id=self.data.get('client_id')).first()
             if access_client is None:
                 access_client = ApplicationPublicAccessClient(id=self.data.get('client_id'),
-                                                              application_id=self.data.get('application_id'),
+                                                              application_id=self.data.get(
+                                                                  'application_id'),
                                                               access_num=0,
                                                               intraday_access_num=0)
                 access_client.save()
@@ -225,6 +237,8 @@ class ChatMessageSerializer(serializers.Serializer):
         client_id = self.data.get('client_id')
         client_type = self.data.get('client_type')
         user_id = chat_info.application.user_id
+        print("1.----------", message, "是否数据流：", stream)
+
         work_flow_manage = WorkflowManage(Flow.new_instance(chat_info.work_flow_version.work_flow),
                                           {'history_chat_record': chat_info.chat_record_list, 'question': message,
                                            'chat_id': chat_info.chat_id, 'chat_record_id': str(uuid.uuid1()),
@@ -238,7 +252,8 @@ class ChatMessageSerializer(serializers.Serializer):
         super().is_valid(raise_exception=True)
         chat_info = self.get_chat_info()
         if chat_info.application.type == ApplicationTypeChoices.SIMPLE:
-            self.is_valid_application_simple(raise_exception=True, chat_info=chat_info),
+            self.is_valid_application_simple(
+                raise_exception=True, chat_info=chat_info),
             return self.chat_simple(chat_info)
         else:
             self.is_valid_application_workflow(raise_exception=True)
@@ -258,7 +273,8 @@ class ChatMessageSerializer(serializers.Serializer):
         chat = QuerySet(Chat).filter(id=chat_id).first()
         if chat is None:
             raise AppApiException(500, "会话不存在")
-        application = QuerySet(Application).filter(id=chat.application_id).first()
+        application = QuerySet(Application).filter(
+            id=chat.application_id).first()
         if application is None:
             raise AppApiException(500, "应用不存在")
         if application.type == ApplicationTypeChoices.SIMPLE:

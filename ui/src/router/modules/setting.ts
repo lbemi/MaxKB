@@ -66,30 +66,30 @@ const settingRouter = {
         permission: new Role('ADMIN')
       },
       children: [
-        {
-          path: '/system/theme',
-          name: 'theme',
-          meta: {
-            title: '外观设置',
-            activeMenu: '/setting',
-            parentPath: '/setting',
-            parentName: 'setting',
-            permission: new ComplexPermission(['ADMIN'], ['x-pack'], 'AND')
-          },
-          component: () => import('@/views/theme/index.vue')
-        },
-        {
-          path: '/system/authentication',
-          name: 'authentication',
-          meta: {
-            title: '登录认证',
-            activeMenu: '/setting',
-            parentPath: '/setting',
-            parentName: 'setting',
-            permission: new ComplexPermission(['ADMIN'], ['x-pack'], 'AND')
-          },
-          component: () => import('@/views/authentication/index.vue')
-        },
+        // {
+        //   path: '/system/theme',
+        //   name: 'theme',
+        //   meta: {
+        //     title: '外观设置',
+        //     activeMenu: '/setting',
+        //     parentPath: '/setting',
+        //     parentName: 'setting',
+        //     permission: new ComplexPermission(['ADMIN'], ['x-pack'], 'AND')
+        //   },
+        //   component: () => import('@/views/theme/index.vue')
+        // },
+        // {
+        //   path: '/system/authentication',
+        //   name: 'authentication',
+        //   meta: {
+        //     title: '登录认证',
+        //     activeMenu: '/setting',
+        //     parentPath: '/setting',
+        //     parentName: 'setting',
+        //     permission: new ComplexPermission(['ADMIN'], ['x-pack'], 'AND')
+        //   },
+        //   component: () => import('@/views/authentication/index.vue')
+        // },
         {
           path: '/system/email',
           name: 'email',

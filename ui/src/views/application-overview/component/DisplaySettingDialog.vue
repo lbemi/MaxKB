@@ -198,7 +198,7 @@ const submit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   await formEl.validate((valid, fields) => {
     if (valid) {
-      if (user.isEnterprise()) {
+      if (!user.isEnterprise()) {
         let fd = new FormData()
         Object.keys(form.value).map((item) => {
           fd.append(item, form.value[item])

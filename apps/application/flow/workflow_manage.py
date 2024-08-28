@@ -45,7 +45,8 @@ class Node:
             self.__setattr__(keyword, kwargs.get(keyword))
 
 
-end_nodes = ['ai-chat-node', 'reply-node', 'function-node', 'function-lib-node']
+end_nodes = ['ai-chat-node', 'reply-node',
+             'function-node', 'function-lib-node']
 
 
 class Flow:
@@ -59,11 +60,13 @@ class Flow:
         edges = flow_obj.get('edges')
         nodes = [Node(node.get('id'), node.get('type'), **node)
                  for node in nodes]
-        edges = [Edge(edge.get('id'), edge.get('type'), **edge) for edge in edges]
+        edges = [Edge(edge.get('id'), edge.get('type'), **edge)
+                 for edge in edges]
         return Flow(nodes, edges)
 
     def get_start_node(self):
-        start_node_list = [node for node in self.nodes if node.id == 'start-node']
+        start_node_list = [
+            node for node in self.nodes if node.id == 'start-node']
         return start_node_list[0]
 
     def get_search_node(self):
@@ -88,7 +91,8 @@ class Flow:
             branch_list = node.properties.get('node_data').get('branch')
             for branch in branch_list:
                 source_anchor_id = f"{node.id}_{branch.get('id')}_right"
-                edge_list = [edge for edge in self.edges if edge.sourceAnchorId == source_anchor_id]
+                edge_list = [
+                    edge for edge in self.edges if edge.sourceAnchorId == source_anchor_id]
                 if len(edge_list) == 0:
                     raise AppApiException(500,
                                           f'{node.properties.get("stepName")} 节点的{branch.get("type")}分支需要连接')
@@ -97,17 +101,21 @@ class Flow:
                                           f'{node.properties.get("stepName")} 节点的{branch.get("type")}分支不能连接俩个节点')
 
         else:
-            edge_list = [edge for edge in self.edges if edge.sourceNodeId == node.id]
+            edge_list = [
+                edge for edge in self.edges if edge.sourceNodeId == node.id]
             if len(edge_list) == 0 and not end_nodes.__contains__(node.type):
-                raise AppApiException(500, f'{node.properties.get("stepName")} 节点不能当做结束节点')
+                raise AppApiException(
+                    500, f'{node.properties.get("stepName")} 节点不能当做结束节点')
             elif len(edge_list) > 1:
                 raise AppApiException(500,
                                       f'{node.properties.get("stepName")} 节点不能连接俩个节点')
 
     def get_next_nodes(self, node: Node):
-        edge_list = [edge for edge in self.edges if edge.sourceNodeId == node.id]
+        edge_list = [
+            edge for edge in self.edges if edge.sourceNodeId == node.id]
         node_list = reduce(lambda x, y: [*x, *y],
-                           [[node for node in self.nodes if node.id == edge.targetNodeId] for edge in edge_list],
+                           [[node for node in self.nodes if node.id ==
+                               edge.targetNodeId] for edge in edge_list],
                            [])
         if len(node_list) == 0 and not end_nodes.__contains__(node.type):
             raise AppApiException(500,
@@ -123,39 +131,52 @@ class Flow:
             self.is_valid_work_flow(next_node)
 
     def is_valid_start_node(self):
-        start_node_list = [node for node in self.nodes if node.id == 'start-node']
+        start_node_list = [
+            node for node in self.nodes if node.id == 'start-node']
         if len(start_node_list) == 0:
             raise AppApiException(500, '开始节点必填')
         if len(start_node_list) > 1:
             raise AppApiException(500, '开始节点只能有一个')
 
     def is_valid_model_params(self):
-        node_list = [node for node in self.nodes if (node.type == 'ai-chat-node' or node.type == 'question-node')]
+        node_list = [node for node in self.nodes if (
+            node.type == 'ai-chat-node' or node.type == 'question-node')]
         for node in node_list:
-            model = QuerySet(Model).filter(id=node.properties.get('node_data', {}).get('model_id')).first()
+            model = QuerySet(Model).filter(id=node.properties.get(
+                'node_data', {}).get('model_id')).first()
             if model is None:
-                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 模型不存在'))
-            credential = get_model_credential(model.provider, model.model_type, model.model_name)
-            model_params_setting = node.properties.get('node_data', {}).get('model_params_setting')
+                raise ValidationError(ErrorDetail(
+                    f'节点{node.properties.get("stepName")} 模型不存在'))
+            credential = get_model_credential(
+                model.provider, model.model_type, model.model_name)
+            model_params_setting = node.properties.get(
+                'node_data', {}).get('model_params_setting')
             model_params_setting_form = credential.get_model_params_setting_form(
                 model.model_name)
             if model_params_setting is None:
                 model_params_setting = model_params_setting_form.get_default_form_data()
-                node.properties.get('node_data', {})['model_params_setting'] = model_params_setting
+                node.properties.get('node_data', {})[
+                    'model_params_setting'] = model_params_setting
             model_params_setting_form.valid_form(model_params_setting)
             if node.properties.get('status', 200) != 200:
-                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 不可用'))
-        node_list = [node for node in self.nodes if (node.type == 'function-lib-node')]
+                raise ValidationError(ErrorDetail(
+                    f'节点{node.properties.get("stepName")} 不可用'))
+        node_list = [node for node in self.nodes if (
+            node.type == 'function-lib-node')]
         for node in node_list:
-            function_lib_id = node.properties.get('node_data', {}).get('function_lib_id')
+            function_lib_id = node.properties.get(
+                'node_data', {}).get('function_lib_id')
             if function_lib_id is None:
-                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 函数库id不能为空'))
+                raise ValidationError(ErrorDetail(
+                    f'节点{node.properties.get("stepName")} 函数库id不能为空'))
             f_lib = QuerySet(FunctionLib).filter(id=function_lib_id).first()
             if f_lib is None:
-                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 函数库不可用'))
+                raise ValidationError(ErrorDetail(
+                    f'节点{node.properties.get("stepName")} 函数库不可用'))
 
     def is_valid_base_node(self):
-        base_node_list = [node for node in self.nodes if node.id == 'base-node']
+        base_node_list = [
+            node for node in self.nodes if node.id == 'base-node']
         if len(base_node_list) == 0:
             raise AppApiException(500, '基本信息节点必填')
         if len(base_node_list) > 1:
@@ -182,19 +203,23 @@ class WorkflowManage:
         try:
             while self.has_next_node(self.current_result):
                 self.current_node = self.get_next_node()
-                self.current_node.valid_args(self.current_node.node_params, self.current_node.workflow_params)
+                self.current_node.valid_args(
+                    self.current_node.node_params, self.current_node.workflow_params)
                 self.node_context.append(self.current_node)
                 self.current_result = self.current_node.run()
-                result = self.current_result.write_context(self.current_node, self)
+                result = self.current_result.write_context(
+                    self.current_node, self)
                 if result is not None:
                     list(result)
                 if not self.has_next_node(self.current_result):
                     return tools.to_response_simple(self.params['chat_id'], self.params['chat_record_id'],
-                                                    AIMessage(self.answer), self,
+                                                    AIMessage(
+                                                        self.answer), self,
                                                     self.work_flow_post_handler)
         except Exception as e:
             return tools.to_response(self.params['chat_id'], self.params['chat_record_id'],
-                                     AIMessage(str(e)), self, self.current_node.get_write_error_context(e),
+                                     AIMessage(
+                                         str(e)), self, self.current_node.get_write_error_context(e),
                                      self.work_flow_post_handler)
 
     def run_stream(self):
@@ -205,9 +230,12 @@ class WorkflowManage:
             while self.has_next_node(self.current_result):
                 self.current_node = self.get_next_node()
                 self.node_context.append(self.current_node)
-                self.current_node.valid_args(self.current_node.node_params, self.current_node.workflow_params)
+                self.current_node.valid_args(
+                    self.current_node.node_params, self.current_node.workflow_params)
                 self.current_result = self.current_node.run()
-                result = self.current_result.write_context(self.current_node, self)
+                print("2.---当前执行步骤：：： ", self.current_node)
+                result = self.current_result.write_context(
+                    self.current_node, self)
                 if result is not None:
                     if self.is_result():
                         for r in result:
@@ -276,7 +304,8 @@ class WorkflowManage:
         """
         if self.current_node is None:
             node = self.get_start_node()
-            node_instance = get_node(node.type)(node, self.params, self.context)
+            node_instance = get_node(node.type)(
+                node, self.params, self.context)
             return node_instance
         if self.current_result is not None and self.current_result.is_assertion_result():
             for edge in self.flow.edges:
@@ -319,8 +348,10 @@ class WorkflowManage:
                 fields = node_config.get('fields')
                 if fields is not None:
                     for field in fields:
-                        globeLabel = f"{properties.get('stepName')}.{field.get('value')}"
-                        globeValue = f"context['{node.id}'].{field.get('value')}"
+                        globeLabel = f"{properties.get('stepName')}.{
+                            field.get('value')}"
+                        globeValue = f"context['{node.id}'].{
+                            field.get('value')}"
                         prompt = prompt.replace(globeLabel, globeValue)
                 global_fields = node_config.get('globalFields')
                 if global_fields is not None:
@@ -329,7 +360,8 @@ class WorkflowManage:
                         globeValue = f"context['global'].{field.get('value')}"
                         prompt = prompt.replace(globeLabel, globeValue)
                 context[node.id] = node.context
-        prompt_template = PromptTemplate.from_template(prompt, template_format='jinja2')
+        prompt_template = PromptTemplate.from_template(
+            prompt, template_format='jinja2')
 
         value = prompt_template.format(context=context)
         return value
@@ -339,7 +371,8 @@ class WorkflowManage:
         获取启动节点
         @return:
         """
-        start_node_list = [node for node in self.flow.nodes if node.type == 'start-node']
+        start_node_list = [
+            node for node in self.flow.nodes if node.type == 'start-node']
         return start_node_list[0]
 
     def get_node_cls_by_id(self, node_id):

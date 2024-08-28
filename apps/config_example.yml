@@ -17,7 +17,7 @@ DB_ENGINE: django.db.backends.postgresql_psycopg2
 EMBEDDING_MODEL_PATH: /Users/lei/python/MaxKB/apps/model/embedding
 EMBEDDING_MODEL_NAME: /Users/lei/python/MaxKB/apps/model/embedding/shibing624_text2vec-base-chinese
 
-DEBUG: false
+DEBUG: true
 
 TIME_ZONE: Asia/Shanghai
 # # 邮箱配置
