@@ -55,7 +55,7 @@
         />
       </g>
     </svg>
-    <img v-else src="@/assets/logo/MaxKB-logo.svg" :height="height" />
+    <img v-else src="@/assets/logo/atl.site.png" :height="height" />
   </template>
 </template>
 <script setup lang="ts">
@@ -87,6 +87,16 @@ const fileURL = computed(() => {
 })
 </script>
 <style lang="scss" scoped>
+.login-warp {
+  height: 100vh;
+
+  .login-image {
+    background: url(@/assets/login.jpg) no-repeat;
+    background-size: 100% 100%;
+    width: 100%;
+    height: 100%;
+  }
+}
 .custom-logo-color {
   path {
     fill: var(--el-color-primary);

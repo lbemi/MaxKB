@@ -34,6 +34,6 @@ export const defaultSetting = {
   icon: '',
   loginLogo: '',
   loginImage: '',
-  title: 'MaxKB',
-  slogan: '欢迎使用 MaxKB 智能知识库'
+  title: '云灵AI',
+  slogan: '欢迎使用 云灵AI 智能知识库'
 }
