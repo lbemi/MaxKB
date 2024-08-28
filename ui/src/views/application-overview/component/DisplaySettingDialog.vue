@@ -4,24 +4,12 @@
       <el-form-item>
         <el-space direction="vertical" alignment="start">
           <el-checkbox v-model="form.show_source" label="显示知识来源" />
-          <el-checkbox
-            v-model="form.show_history"
-            label="显示历史记录"
-            v-if="user.isEnterprise()"
-          />
-          <el-checkbox
-            v-model="form.draggable"
-            label="可拖拽位置（浮窗模式）"
-            v-if="user.isEnterprise()"
-          />
-          <el-checkbox
-            v-model="form.show_guide"
-            label="显示引导图（浮窗模式）"
-            v-if="user.isEnterprise()"
-          />
+          <el-checkbox v-model="form.show_history" label="显示历史记录" />
+          <el-checkbox v-model="form.draggable" label="可拖拽位置（浮窗模式）" />
+          <el-checkbox v-model="form.show_guide" label="显示引导图（浮窗模式）" />
         </el-space>
       </el-form-item>
-      <el-form-item label="对话头像" v-if="user.isEnterprise()">
+      <el-form-item label="对话头像">
         <div class="flex mt-8">
           <div class="border border-r-4 mr-16" style="padding: 8px">
             <el-image
@@ -53,7 +41,7 @@
           </el-upload>
         </div>
       </el-form-item>
-      <el-form-item label="浮窗入口图标" v-if="user.isEnterprise()">
+      <el-form-item label="浮窗入口图标">
         <div class="flex mt-8">
           <div class="border border-r-4 mr-16" style="padding: 8px">
             <el-image
@@ -93,9 +81,7 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button v-if="user.isEnterprise()" type="primary" @click.prevent="resetForm" link
-          >恢复默认
-        </el-button>
+        <el-button type="primary" @click.prevent="resetForm" link>恢复默认 </el-button>
         <el-button @click.prevent="dialogVisible = false"
           >{{ $t('views.applicationOverview.appInfo.LimitDialog.cancelButtonText') }}
         </el-button>
@@ -191,7 +177,7 @@ const onChange = (file: any, fileList: UploadFiles, attr: string) => {
 }
 
 const open = (data: any) => {
-  if (user.isEnterprise()) {
+  if (!user.isEnterprise()) {
     xpackForm.value.show_source = data.show_source
     xpackForm.value.show_history = data.show_history
     xpackForm.value.draggable = data.draggable

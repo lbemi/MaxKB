@@ -64,7 +64,8 @@ class LoginSerializer(ApiMixin, serializers.Serializer):
     username = serializers.CharField(required=True,
                                      error_messages=ErrMessage.char("用户名"))
 
-    password = serializers.CharField(required=True, error_messages=ErrMessage.char("密码"))
+    password = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("密码"))
 
     def is_valid(self, *, raise_exception=False):
         """
@@ -138,24 +139,23 @@ class RegisterSerializer(ApiMixin, serializers.Serializer):
     password = serializers.CharField(required=True, error_messages=ErrMessage.char("密码"),
                                      validators=[validators.RegexValidator(regex=re.compile(
                                          "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                         "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                         , message="密码长度6-20个字符，必须字母、数字、特殊字符组合")])
+                                         "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="密码长度6-20个字符，必须字母、数字、特殊字符组合")])
 
     re_password = serializers.CharField(required=True,
                                         error_messages=ErrMessage.char("确认密码"),
                                         validators=[validators.RegexValidator(regex=re.compile(
                                             "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                            "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                            , message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")])
+                                            "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")])
 
-    code = serializers.CharField(required=True, error_messages=ErrMessage.char("验证码"))
+    code = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("验证码"))
 
     class Meta:
         model = User
         fields = '__all__'
 
     @lock(lock_key=lambda this, raise_exception: (
-            this.initial_data.get("email") + ":register"
+        this.initial_data.get("email") + ":register"
 
     ))
     def is_valid(self, *, raise_exception=False):
@@ -169,7 +169,8 @@ class RegisterSerializer(ApiMixin, serializers.Serializer):
         cache_code = user_cache.get(code_cache_key)
         if code != cache_code:
             raise ExceptionCodeConstants.CODE_ERROR.value.to_app_api_exception()
-        u = QuerySet(User).filter(Q(username=username) | Q(email=email)).first()
+        u = QuerySet(User).filter(
+            Q(username=username) | Q(email=email)).first()
         if u is not None:
             if u.email == email:
                 raise ExceptionCodeConstants.EMAIL_IS_EXIST.value.to_app_api_exception()
@@ -219,7 +220,8 @@ class CheckCodeSerializer(ApiMixin, serializers.Serializer):
         error_messages=ErrMessage.char("邮箱"),
         validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
                                               code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
-    code = serializers.CharField(required=True, error_messages=ErrMessage.char("验证码"))
+    code = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("验证码"))
 
     type = serializers.CharField(required=True,
                                  error_messages=ErrMessage.char("类型"),
@@ -230,7 +232,8 @@ class CheckCodeSerializer(ApiMixin, serializers.Serializer):
 
     def is_valid(self, *, raise_exception=False):
         super().is_valid()
-        value = user_cache.get(self.data.get("email") + ":" + self.data.get("type"))
+        value = user_cache.get(self.data.get(
+            "email") + ":" + self.data.get("type"))
         if value is None or value != self.data.get("code"):
             raise ExceptionCodeConstants.CODE_ERROR.value.to_app_api_exception()
         return True
@@ -265,19 +268,18 @@ class RePasswordSerializer(ApiMixin, serializers.Serializer):
         validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
                                               code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
 
-    code = serializers.CharField(required=True, error_messages=ErrMessage.char("验证码"))
+    code = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("验证码"))
 
     password = serializers.CharField(required=True, error_messages=ErrMessage.char("密码"),
                                      validators=[validators.RegexValidator(regex=re.compile(
                                          "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                         "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                         , message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")])
+                                         "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")])
 
     re_password = serializers.CharField(required=True, error_messages=ErrMessage.char("确认密码"),
                                         validators=[validators.RegexValidator(regex=re.compile(
                                             "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                            "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                            , message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")]
+                                            "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")]
                                         )
 
     class Meta:
@@ -325,8 +327,7 @@ class RePasswordSerializer(ApiMixin, serializers.Serializer):
 
 class SendEmailSerializer(ApiMixin, serializers.Serializer):
     email = serializers.EmailField(
-        required=True
-        , error_messages=ErrMessage.char("邮箱"),
+        required=True, error_messages=ErrMessage.char("邮箱"),
         validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
                                               code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
 
@@ -341,7 +342,8 @@ class SendEmailSerializer(ApiMixin, serializers.Serializer):
 
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=raise_exception)
-        user_exists = QuerySet(User).filter(email=self.data.get('email')).exists()
+        user_exists = QuerySet(User).filter(
+            email=self.data.get('email')).exists()
         if not user_exists and self.data.get('type') == 'reset_password':
             raise ExceptionCodeConstants.EMAIL_IS_NOT_EXIST.value.to_app_api_exception()
         elif user_exists and self.data.get('type') == 'register':
@@ -372,16 +374,20 @@ class SendEmailSerializer(ApiMixin, serializers.Serializer):
         code_cache_key = email + ":" + state
         code_cache_key_lock = code_cache_key + "_lock"
         # 设置缓存
-        user_cache.set(code_cache_key_lock, code, timeout=datetime.timedelta(minutes=1))
-        system_setting = QuerySet(SystemSetting).filter(type=SettingType.EMAIL.value).first()
+        user_cache.set(code_cache_key_lock, code,
+                       timeout=datetime.timedelta(minutes=1))
+        system_setting = QuerySet(SystemSetting).filter(
+            type=SettingType.EMAIL.value).first()
         if system_setting is None:
             user_cache.delete(code_cache_key_lock)
             raise AppApiException(1004, "邮箱未设置,请联系管理员设置")
         try:
             connection = EmailBackend(system_setting.meta.get("email_host"),
                                       system_setting.meta.get('email_port'),
-                                      system_setting.meta.get('email_host_user'),
-                                      system_setting.meta.get('email_host_password'),
+                                      system_setting.meta.get(
+                                          'email_host_user'),
+                                      system_setting.meta.get(
+                                          'email_host_password'),
                                       system_setting.meta.get('email_use_tls'),
                                       False,
                                       system_setting.meta.get('email_use_ssl')
@@ -395,7 +401,8 @@ class SendEmailSerializer(ApiMixin, serializers.Serializer):
         except Exception as e:
             user_cache.delete(code_cache_key_lock)
             raise AppApiException(500, f"{str(e)}邮件发送失败")
-        user_cache.set(code_cache_key, code, timeout=datetime.timedelta(minutes=30))
+        user_cache.set(code_cache_key, code,
+                       timeout=datetime.timedelta(minutes=30))
         return True
 
     def get_request_body_api(self):
@@ -422,7 +429,8 @@ class UserProfile(ApiMixin):
         :return:
         """
         permission_list = get_user_dynamics_permission(str(user.id))
-        permission_list += [p.value for p in get_permission_list_by_role(RoleConstants[user.role])]
+        permission_list += [
+            p.value for p in get_permission_list_by_role(RoleConstants[user.role])]
         return {'id': user.id, 'username': user.username, 'email': user.email, 'role': user.role,
                 'permissions': [str(p) for p in permission_list],
                 'is_edit_password': user.password == 'd880e722c47a34d8e9fce789fc62389d' if user.role == 'ADMIN' else False}
@@ -596,8 +604,7 @@ class UserManageSerializer(serializers.Serializer):
         password = serializers.CharField(required=True, error_messages=ErrMessage.char("密码"),
                                          validators=[validators.RegexValidator(regex=re.compile(
                                              "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                             "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                             , message="密码长度6-20个字符，必须字母、数字、特殊字符组合")])
+                                             "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="密码长度6-20个字符，必须字母、数字、特殊字符组合")])
 
         nick_name = serializers.CharField(required=False, error_messages=ErrMessage.char("姓名"), max_length=64,
                                           allow_null=True, allow_blank=True)
@@ -608,7 +615,8 @@ class UserManageSerializer(serializers.Serializer):
             super().is_valid(raise_exception=True)
             username = self.data.get('username')
             email = self.data.get('email')
-            u = QuerySet(User).filter(Q(username=username) | Q(email=email)).first()
+            u = QuerySet(User).filter(
+                Q(username=username) | Q(email=email)).first()
             if u is not None:
                 if u.email == email:
                     raise ExceptionCodeConstants.EMAIL_IS_EXIST.value.to_app_api_exception()
@@ -640,7 +648,8 @@ class UserManageSerializer(serializers.Serializer):
                                           allow_null=True, allow_blank=True)
         phone = serializers.CharField(required=False, error_messages=ErrMessage.char("手机号"), max_length=20,
                                       allow_null=True, allow_blank=True)
-        is_active = serializers.BooleanField(required=False, error_messages=ErrMessage.char("是否可用"))
+        is_active = serializers.BooleanField(
+            required=False, error_messages=ErrMessage.char("是否可用"))
 
         def is_valid(self, *, user_id=None, raise_exception=False):
             super().is_valid(raise_exception=True)
@@ -664,13 +673,11 @@ class UserManageSerializer(serializers.Serializer):
         password = serializers.CharField(required=True, error_messages=ErrMessage.char("密码"),
                                          validators=[validators.RegexValidator(regex=re.compile(
                                              "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                             "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                             , message="密码长度6-20个字符，必须字母、数字、特殊字符组合")])
+                                             "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="密码长度6-20个字符，必须字母、数字、特殊字符组合")])
         re_password = serializers.CharField(required=True, error_messages=ErrMessage.char("确认密码"),
                                             validators=[validators.RegexValidator(regex=re.compile(
                                                 "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z_!@#$%^&*`~.()-+=]+$)(?![a-z0-9]+$)(?![a-z_!@#$%^&*`~()-+=]+$)"
-                                                "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$")
-                                                , message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")]
+                                                "(?![0-9_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9_!@#$%^&*`~.()-+=]{6,20}$"), message="确认密码长度6-20个字符，必须字母、数字、特殊字符组合")]
                                             )
 
         @staticmethod
@@ -695,12 +702,13 @@ class UserManageSerializer(serializers.Serializer):
     @transaction.atomic
     def save(self, instance, with_valid=True):
         if with_valid:
-            UserManageSerializer.UserInstance(data=instance).is_valid(raise_exception=True)
+            UserManageSerializer.UserInstance(
+                data=instance).is_valid(raise_exception=True)
 
         user = User(id=uuid.uuid1(), email=instance.get('email'),
-                    phone="" if instance.get('phone') is None else instance.get('phone'),
-                    nick_name="" if instance.get('nick_name') is None else instance.get('nick_name')
-                    , username=instance.get('username'), password=password_encrypt(instance.get('password')),
+                    phone="" if instance.get(
+                        'phone') is None else instance.get('phone'),
+                    nick_name="" if instance.get('nick_name') is None else instance.get('nick_name'), username=instance.get('username'), password=password_encrypt(instance.get('password')),
                     role=RoleConstants.USER.name, source="LOCAL",
                     is_active=True)
         user.save()
@@ -709,7 +717,8 @@ class UserManageSerializer(serializers.Serializer):
         return UserInstanceSerializer(user).data
 
     class Operate(serializers.Serializer):
-        id = serializers.UUIDField(required=True, error_messages=ErrMessage.char("用户id"))
+        id = serializers.UUIDField(
+            required=True, error_messages=ErrMessage.char("用户id"))
 
         def is_valid(self, *, raise_exception=False):
             super().is_valid(raise_exception=True)
@@ -725,7 +734,8 @@ class UserManageSerializer(serializers.Serializer):
                     raise AppApiException(1004, "无法删除管理员")
             user_id = self.data.get('id')
 
-            team_member_list = QuerySet(TeamMember).filter(Q(user_id=user_id) | Q(team_id=user_id))
+            team_member_list = QuerySet(TeamMember).filter(
+                Q(user_id=user_id) | Q(team_id=user_id))
             # 删除团队成员权限
             QuerySet(TeamMemberPermission).filter(
                 member_id__in=[team_member.id for team_member in team_member_list]).delete()
@@ -734,11 +744,13 @@ class UserManageSerializer(serializers.Serializer):
             # 删除应用相关 因为应用相关都是级联删除所以不需要手动删除
             QuerySet(Application).filter(user_id=self.data.get('id')).delete()
             # 删除数据集相关
-            dataset_list = QuerySet(DataSet).filter(user_id=self.data.get('id'))
+            dataset_list = QuerySet(DataSet).filter(
+                user_id=self.data.get('id'))
             dataset_id_list = [str(dataset.id) for dataset in dataset_list]
             QuerySet(Document).filter(dataset_id__in=dataset_id_list).delete()
             QuerySet(Paragraph).filter(dataset_id__in=dataset_id_list).delete()
-            QuerySet(ProblemParagraphMapping).filter(dataset_id__in=dataset_id_list).delete()
+            QuerySet(ProblemParagraphMapping).filter(
+                dataset_id__in=dataset_id_list).delete()
             QuerySet(Problem).filter(dataset_id__in=dataset_id_list).delete()
             delete_embedding_by_dataset_id_list(dataset_id_list)
             dataset_list.delete()
@@ -776,7 +788,8 @@ class UserManageSerializer(serializers.Serializer):
         def re_password(self, instance, with_valid=True):
             if with_valid:
                 self.is_valid(raise_exception=True)
-                UserManageSerializer.RePasswordInstance(data=instance).is_valid(raise_exception=True)
+                UserManageSerializer.RePasswordInstance(
+                    data=instance).is_valid(raise_exception=True)
             user = QuerySet(User).filter(id=self.data.get('id')).first()
             user.password = password_encrypt(instance.get('password'))
             user.save()

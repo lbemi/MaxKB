@@ -125,7 +125,7 @@ const open = () => {
 }
 
 const submitValid = () => {
-  if (user.isEnterprise()) {
+  if (!user.isEnterprise()) {
     submitHandle()
   } else {
     common.asyncGetValid(ValidType.Dataset, ValidCount.Dataset, loading).then(async (res: any) => {

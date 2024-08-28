@@ -45,7 +45,7 @@
 
     <!-- 历史记录弹出层 -->
     <div
-      v-if="applicationDetail.show_history || !user.isEnterprise()"
+      v-if="applicationDetail.show_history"
       @click.prevent.stop="show = !show"
       class="chat-popover-button cursor color-secondary"
     >
@@ -187,7 +187,7 @@ function getAppProfile() {
     .asyncGetAppProfile(loading)
     .then((res: any) => {
       applicationDetail.value = res.data
-      if (res.data?.show_history || !user.isEnterprise()) {
+      if (res.data?.show_history) {
         getChatLog(applicationDetail.value.id)
       }
     })

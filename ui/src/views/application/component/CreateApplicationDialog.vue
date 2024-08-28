@@ -175,7 +175,7 @@ const open = () => {
 }
 
 const submitValid = (formEl: FormInstance | undefined) => {
-  if (user.isEnterprise()) {
+  if (!user.isEnterprise()) {
     submitHandle(formEl)
   } else {
     common

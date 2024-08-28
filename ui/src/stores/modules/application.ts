@@ -54,7 +54,7 @@ const useApplicationStore = defineStore({
     async asyncGetAccessToken(id: string, loading?: Ref<boolean>) {
       return new Promise((resolve, reject) => {
         const user = useUserStore()
-        if (user.isEnterprise()) {
+        if (!user.isEnterprise()) {
           applicationXpackApi
             .getAccessToken(id, loading)
             .then((data) => {
@@ -79,7 +79,7 @@ const useApplicationStore = defineStore({
     async asyncGetAppProfile(loading?: Ref<boolean>) {
       return new Promise((resolve, reject) => {
         const user = useUserStore()
-        if (user.isEnterprise()) {
+        if (!user.isEnterprise()) {
           applicationXpackApi
             .getAppXpackProfile(loading)
             .then((data) => {

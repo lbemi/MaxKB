@@ -20,7 +20,7 @@ const currentTemplate = computed(() => {
   if (mode && mode === 'embed') {
     modeName = 'embed'
   } else {
-    modeName = show_history.value || !user.isEnterprise() ? 'pc' : 'base'
+    modeName = show_history.value || user.isEnterprise() ? 'pc' : 'base'
   }
 
   const name = `/src/views/chat/${modeName}/index.vue`
@@ -38,7 +38,7 @@ function getAppProfile() {
 
 onMounted(() => {
   user.asyncGetProfile().then(() => {
-    if (user.isEnterprise()) {
+    if (!user.isEnterprise()) {
       getAppProfile()
     }
   })

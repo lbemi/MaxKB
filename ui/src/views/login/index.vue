@@ -1,5 +1,5 @@
 <template>
-  <login-layout v-if="user.isEnterprise() ? user.themeInfo : true" v-loading="loading">
+  <login-layout v-if="!user.isEnterprise() ? user.themeInfo : true" v-loading="loading">
     <LoginContainer :subTitle="user.themeInfo?.slogan || '欢迎使用云灵AI助手'">
       <h2 class="mb-24">{{ loginMode || '普通登录' }}</h2>
       <el-form
@@ -174,21 +174,21 @@ const login = () => {
 
 onMounted(() => {
   user.asyncGetProfile().then((res) => {
-    if (user.isEnterprise()) {
-      loading.value = true
-      user
-        .getAuthType()
-        .then((res) => {
-          modeList.value = [...modeList.value, ...res]
-        })
-        .finally(() => (loading.value = false))
-    }
+    // if (user.isEnterprise()) {
+    //   loading.value = true
+    //   user
+    //     .getAuthType()
+    //     .then((res) => {
+    //       modeList.value = [...modeList.value, ...res]
+    //     })
+    //     .finally(() => (loading.value = false))
+    // }
   })
 })
 onBeforeMount(() => {
-  if (user.isEnterprise()) {
-    user.theme(loading)
-  }
+  // if (user.isEnterprise()) {
+  //   user.theme(loading)
+  // }
 })
 </script>
 <style lang="scss" scope>

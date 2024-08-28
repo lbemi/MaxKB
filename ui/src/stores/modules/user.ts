@@ -12,8 +12,8 @@ export interface userStateTypes {
   token: any
   version?: string
   accessToken?: string
-  XPACK_LICENSE_IS_VALID: false
-  isXPack: false
+  XPACK_LICENSE_IS_VALID: true | false
+  isXPack: true | false
   themeInfo: any
 }
 
@@ -23,9 +23,9 @@ const useUserStore = defineStore({
     userType: 1,
     userInfo: null,
     token: '',
-    version: '',
-    XPACK_LICENSE_IS_VALID: false,
-    isXPack: false,
+    version: '1.4.1',
+    XPACK_LICENSE_IS_VALID: true,
+    isXPack: true,
     themeInfo: null
   }),
   actions: {
@@ -89,7 +89,7 @@ const useUserStore = defineStore({
             this.XPACK_LICENSE_IS_VALID = ok.data?.XPACK_LICENSE_IS_VALID
 
             if (this.isEnterprise()) {
-              await this.theme()
+              // await this.theme()
             }
             resolve(ok)
           })
