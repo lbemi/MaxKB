@@ -9,10 +9,6 @@
     </div>
     <el-form
       @submit.prevent
-      @mousemove.stop
-      @mousedown.stop
-      @keydown.stop
-      @click.stop
       ref="FunctionNodeFormRef"
       :model="chat_data"
       label-position="top"
@@ -76,8 +72,6 @@
         <CodemirrorEditor
           v-model="chat_data.code"
           @wheel="wheel"
-          @keydown="isKeyDown = true"
-          @keyup="isKeyDown = false"
           style="height: 130px !important"
         />
         <div class="function-CodemirrorEditor__footer">
@@ -130,16 +124,15 @@ import { isLastNode } from '@/workflow/common/data'
 
 const props = defineProps<{ nodeModel: any }>()
 
-const isKeyDown = ref(false)
 const wheel = (e: any) => {
-  if (isKeyDown.value) {
+  if (e.ctrlKey === true) {
     e.preventDefault()
+    return true
   } else {
     e.stopPropagation()
     return true
   }
 }
-
 const FieldFormDialogRef = ref()
 const nodeCascaderRef = ref()
 
@@ -228,6 +221,4 @@ onMounted(() => {
   }, 100)
 })
 </script>
-<style lang="scss">
-
-</style>
+<style lang="scss"></style>
