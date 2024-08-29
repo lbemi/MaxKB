@@ -39,18 +39,26 @@ def get_model_setting_dict():
 
 
 class Application(AppModelMixin):
-    id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
+    id = models.UUIDField(primary_key=True, max_length=128,
+                          default=uuid.uuid1, editable=False, verbose_name="主键id")
     name = models.CharField(max_length=128, verbose_name="应用名称")
     desc = models.CharField(max_length=512, verbose_name="引用描述", default="")
-    prologue = models.CharField(max_length=4096, verbose_name="开场白", default="")
+    prologue = models.CharField(
+        max_length=4096, verbose_name="开场白", default="")
     dialogue_number = models.IntegerField(default=0, verbose_name="会话数量")
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    model = models.ForeignKey(Model, on_delete=models.SET_NULL, db_constraint=False, blank=True, null=True)
-    dataset_setting = models.JSONField(verbose_name="数据集参数设置", default=get_dataset_setting_dict)
-    model_setting = models.JSONField(verbose_name="模型参数相关设置", default=get_model_setting_dict)
-    model_params_setting = models.JSONField(verbose_name="模型参数相关设置", default={})
-    problem_optimization = models.BooleanField(verbose_name="问题优化", default=False)
-    icon = models.CharField(max_length=256, verbose_name="应用icon", default="/ui/favicon.ico")
+    model = models.ForeignKey(
+        Model, on_delete=models.SET_NULL, db_constraint=False, blank=True, null=True)
+    dataset_setting = models.JSONField(
+        verbose_name="数据集参数设置", default=get_dataset_setting_dict)
+    model_setting = models.JSONField(
+        verbose_name="模型参数相关设置", default=get_model_setting_dict)
+    model_params_setting = models.JSONField(
+        verbose_name="模型参数相关设置", default={})
+    problem_optimization = models.BooleanField(
+        verbose_name="问题优化", default=False)
+    icon = models.CharField(
+        max_length=256, verbose_name="应用icon", default="/ui/favicon.ico")
     work_flow = models.JSONField(verbose_name="工作流数据", default=dict)
     type = models.CharField(verbose_name="应用类型", choices=ApplicationTypeChoices.choices,
                             default=ApplicationTypeChoices.SIMPLE, max_length=256)
@@ -74,7 +82,8 @@ class Application(AppModelMixin):
 
 
 class WorkFlowVersion(AppModelMixin):
-    id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
+    id = models.UUIDField(primary_key=True, max_length=128,
+                          default=uuid.uuid1, editable=False, verbose_name="主键id")
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
     work_flow = models.JSONField(verbose_name="工作流数据", default=dict)
 
@@ -83,7 +92,8 @@ class WorkFlowVersion(AppModelMixin):
 
 
 class ApplicationDatasetMapping(AppModelMixin):
-    id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
+    id = models.UUIDField(primary_key=True, max_length=128,
+                          default=uuid.uuid1, editable=False, verbose_name="主键id")
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
@@ -92,7 +102,8 @@ class ApplicationDatasetMapping(AppModelMixin):
 
 
 class Chat(AppModelMixin):
-    id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
+    id = models.UUIDField(primary_key=True, max_length=128,
+                          default=uuid.uuid1, editable=False, verbose_name="主键id")
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
     abstract = models.CharField(max_length=1024, verbose_name="摘要")
     client_id = models.UUIDField(verbose_name="客户端id", default=None, null=True)
@@ -123,7 +134,8 @@ class ChatRecord(AppModelMixin):
     """
     对话日志 详情
     """
-    id = models.UUIDField(primary_key=True, max_length=128, default=uuid.uuid1, editable=False, verbose_name="主键id")
+    id = models.UUIDField(primary_key=True, max_length=128,
+                          default=uuid.uuid1, editable=False, verbose_name="主键id")
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     vote_status = models.CharField(verbose_name='投票', max_length=10, choices=VoteChoices.choices,
                                    default=VoteChoices.UN_VOTE)
@@ -132,10 +144,10 @@ class ChatRecord(AppModelMixin):
     message_tokens = models.IntegerField(verbose_name="请求token数量", default=0)
     answer_tokens = models.IntegerField(verbose_name="响应token数量", default=0)
     const = models.IntegerField(verbose_name="总费用", default=0)
-    details = models.JSONField(verbose_name="对话详情", default=dict, encoder=DateEncoder)
+    details = models.JSONField(
+        verbose_name="对话详情", default=dict, encoder=DateEncoder)
     improve_paragraph_id_list = ArrayField(verbose_name="改进标注列表",
-                                           base_field=models.UUIDField(max_length=128, blank=True)
-                                           , default=list)
+                                           base_field=models.UUIDField(max_length=128, blank=True), default=list)
     run_time = models.FloatField(verbose_name="运行时长", default=0)
     index = models.IntegerField(verbose_name="对话下标")
 
