@@ -33,6 +33,8 @@ from common.handle.impl.pdf_split_handle import PdfSplitHandle
 from common.handle.impl.qa.csv_parse_qa_handle import CsvParseQAHandle
 from common.handle.impl.qa.xls_parse_qa_handle import XlsParseQAHandle
 from common.handle.impl.qa.xlsx_parse_qa_handle import XlsxParseQAHandle
+from common.handle.impl.table.csv_parse_table_handle import CsvSplitHandle
+from common.handle.impl.table.excel_parse_table_handle import ExcelSplitHandle
 from common.handle.impl.text_split_handle import TextSplitHandle
 from common.mixins.api_mixin import ApiMixin
 from common.util.common import post, flat_map
@@ -72,6 +74,7 @@ from embedding.task.embedding import (
 from smartdoc.conf import PROJECT_DIR
 
 parse_qa_handle_list = [XlsParseQAHandle(), CsvParseQAHandle(), XlsxParseQAHandle()]
+parse_table_handle_list = [CsvSplitHandle(), ExcelSplitHandle()]
 
 
 class FileBufferHandle:
@@ -205,6 +208,13 @@ class DocumentInstanceQASerializer(ApiMixin, serializers.Serializer):
     )
 
 
+class DocumentInstanceTableSerializer(ApiMixin, serializers.Serializer):
+    file_list = serializers.ListSerializer(required=True,
+                                           error_messages=ErrMessage.list("文件列表"),
+                                           child=serializers.FileField(required=True,
+                                                                       error_messages=ErrMessage.file("文件")))
+
+
 class DocumentSerializers(ApiMixin, serializers.Serializer):
     class Export(ApiMixin, serializers.Serializer):
         type = serializers.CharField(
@@ -273,6 +283,23 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                         "Content-Disposition": 'attachment; filename="excel_template.xlsx"',
                     },
                 )
+
+        def table_export(self, with_valid=True):
+            if with_valid:
+                self.is_valid(raise_exception=True)
+
+            if self.data.get('type') == 'csv':
+                file = open(os.path.join(PROJECT_DIR, "apps", "dataset", 'template', 'MaxKB表格模板.csv'), "rb")
+                content = file.read()
+                file.close()
+                return HttpResponse(content, status=200, headers={'Content-Type': 'text/cxv',
+                                                                  'Content-Disposition': 'attachment; filename="csv_template.csv"'})
+            elif self.data.get('type') == 'excel':
+                file = open(os.path.join(PROJECT_DIR, "apps", "dataset", 'template', 'MaxKB表格模板.xlsx'), "rb")
+                content = file.read()
+                file.close()
+                return HttpResponse(content, status=200, headers={'Content-Type': 'application/vnd.ms-excel',
+                                                                  'Content-Disposition': 'attachment; filename="excel_template.xlsx"'})
 
     class Migrate(ApiMixin, serializers.Serializer):
         dataset_id = serializers.UUIDField(
@@ -446,31 +473,26 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             required=True, error_messages=ErrMessage.char("知识库id")
         )
 
-        name = serializers.CharField(
-            required=False,
-            max_length=128,
-            min_length=1,
-            error_messages=ErrMessage.char("文档名称"),
-        )
-        hit_handling_method = serializers.CharField(
-            required=False, error_messages=ErrMessage.char("命中处理方式")
-        )
+        name = serializers.CharField(required=False, max_length=128,
+                                     min_length=1,
+                                     error_messages=ErrMessage.char(
+                                         "文档名称"))
+        hit_handling_method = serializers.CharField(required=False, error_messages=ErrMessage.char("命中处理方式"))
+        is_active = serializers.BooleanField(required=False, error_messages=ErrMessage.boolean("文档是否可用"))
+        status = serializers.CharField(required=False, error_messages=ErrMessage.char("文档状态"))
 
         def get_query_set(self):
             query_set = QuerySet(model=Document)
-            query_set = query_set.filter(**{"dataset_id": self.data.get("dataset_id")})
-            if "name" in self.data and self.data.get("name") is not None:
-                query_set = query_set.filter(
-                    **{"name__icontains": self.data.get("name")}
-                )
-            if (
-                "hit_handling_method" in self.data
-                and self.data.get("hit_handling_method") is not None
-            ):
-                query_set = query_set.filter(
-                    **{"hit_handling_method": self.data.get("hit_handling_method")}
-                )
-            query_set = query_set.order_by("-create_time")
+            query_set = query_set.filter(**{'dataset_id': self.data.get("dataset_id")})
+            if 'name' in self.data and self.data.get('name') is not None:
+                query_set = query_set.filter(**{'name__icontains': self.data.get('name')})
+            if 'hit_handling_method' in self.data and self.data.get('hit_handling_method') is not None:
+                query_set = query_set.filter(**{'hit_handling_method': self.data.get('hit_handling_method')})
+            if 'is_active' in self.data and self.data.get('is_active') is not None:
+                query_set = query_set.filter(**{'is_active': self.data.get('is_active')})
+            if 'status' in self.data and self.data.get('status') is not None:
+                query_set = query_set.filter(**{'status': self.data.get('status')})
+            query_set = query_set.order_by('-create_time')
             return query_set
 
         def list(self, with_valid=False):
@@ -976,6 +998,22 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
                     return parse_qa_handle.handle(file, get_buffer)
             raise AppApiException(500, "不支持的文件格式")
 
+        @staticmethod
+        def parse_table_file(file):
+            get_buffer = FileBufferHandle().get_buffer
+            for parse_table_handle in parse_table_handle_list:
+                if parse_table_handle.support(file, get_buffer):
+                    return parse_table_handle.handle(file, get_buffer)
+            raise AppApiException(500, '不支持的文件格式')
+
+        @staticmethod
+        def parse_table_file(file):
+            get_buffer = FileBufferHandle().get_buffer
+            for parse_table_handle in parse_table_handle_list:
+                if parse_table_handle.support(file, get_buffer):
+                    return parse_table_handle.handle(file, get_buffer)
+            raise AppApiException(500, '不支持的文件格式')
+
         def save_qa(self, instance: Dict, with_valid=True):
             if with_valid:
                 DocumentInstanceQASerializer(data=instance).is_valid(
@@ -987,6 +1025,22 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             return DocumentSerializers.Batch(
                 data={"dataset_id": self.data.get("dataset_id")}
             ).batch_save(document_list)
+
+        def save_table(self, instance: Dict, with_valid=True):
+            if with_valid:
+                DocumentInstanceTableSerializer(data=instance).is_valid(raise_exception=True)
+                self.is_valid(raise_exception=True)
+            file_list = instance.get('file_list')
+            document_list = flat_map([self.parse_table_file(file) for file in file_list])
+            return DocumentSerializers.Batch(data={'dataset_id': self.data.get('dataset_id')}).batch_save(document_list)
+
+        def save_table(self, instance: Dict, with_valid=True):
+            if with_valid:
+                DocumentInstanceTableSerializer(data=instance).is_valid(raise_exception=True)
+                self.is_valid(raise_exception=True)
+            file_list = instance.get('file_list')
+            document_list = flat_map([self.parse_table_file(file) for file in file_list])
+            return DocumentSerializers.Batch(data={'dataset_id': self.data.get('dataset_id')}).batch_save(document_list)
 
         @post(post_function=post_embedding)
         @transaction.atomic
@@ -1388,6 +1442,21 @@ class DocumentSerializers(ApiMixin, serializers.Serializer):
             if directly_return_similarity is not None:
                 update_dict["directly_return_similarity"] = directly_return_similarity
             QuerySet(Document).filter(id__in=document_id_list).update(**update_dict)
+
+        def batch_refresh(self, instance: Dict, with_valid=True):
+            if with_valid:
+                self.is_valid(raise_exception=True)
+            document_id_list = instance.get("id_list")
+            with transaction.atomic():
+                Document.objects.filter(id__in=document_id_list).update(status=Status.queue_up)
+                Paragraph.objects.filter(document_id__in=document_id_list).update(status=Status.queue_up)
+                dataset_id = self.data.get('dataset_id')
+                embedding_model_id = get_embedding_model_id_by_dataset_id(dataset_id=dataset_id)
+                for document_id in document_id_list:
+                    try:
+                        embedding_by_document.delay(document_id, embedding_model_id)
+                    except AlreadyQueued as e:
+                        raise AppApiException(500, "任务正在执行中,请勿重复下发")
 
 
 class FileBufferHandle:
