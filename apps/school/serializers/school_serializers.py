@@ -15,19 +15,32 @@ class SchoolSerializer(serializers.ModelSerializer):
 
     class Query(ApiMixin, serializers.Serializer):
         school_name = serializers.CharField(
-            required=False, allow_null=True, error_messages=ErrMessage.char("学校名称"))
+            required=False, allow_null=True, error_messages=ErrMessage.char("学校名称")
+        )
+
         def list(self, with_valid=True):
             if with_valid:
                 self.is_valid(raise_exception=True)
             school_name = self.data.get("school_name")
             if not school_name:
                 school_name = ""
-            schools = School.objects.filter(
-                name__contains=school_name)
-            return [{"code": school.code, "name": school.name, "f985": school.f985, "f211": school.f211,
-                     "p": school.p, "c": school.c, "qj": school.qj, "answer_url": school.answer_url,
-                     "dual_class": school.dual_class, "nature": school.nature, "level": school.level}
-                    for school in schools]
+            schools = School.objects.filter(name__contains=school_name)
+            return [
+                {
+                    "code": school.code,
+                    "name": school.name,
+                    "f985": school.f985,
+                    "f211": school.f211,
+                    "p": school.p,
+                    "c": school.c,
+                    "qj": school.qj,
+                    "answer_url": school.answer_url,
+                    "dual_class": school.dual_class,
+                    "nature": school.nature,
+                    "level": school.level,
+                }
+                for school in schools
+            ]
 
         @staticmethod
         def get_request_params_api():
@@ -35,14 +48,26 @@ class SchoolSerializer(serializers.ModelSerializer):
                 name="school_name",
                 in_=openapi.IN_QUERY,
                 type=openapi.TYPE_STRING,
-                required=False)
+                required=False,
+            )
 
         @staticmethod
         def get_response_body_api():
             return openapi.Schema(
                 type="object",
-                required=["code", "name", "f985", "f211", "p", "c", "qj", "answer_url", "dual_class", "nature",
-                          "level"],
+                required=[
+                    "code",
+                    "name",
+                    "f985",
+                    "f211",
+                    "p",
+                    "c",
+                    "qj",
+                    "answer_url",
+                    "dual_class",
+                    "nature",
+                    "level",
+                ],
                 properties={
                     "code": openapi.Schema(type=openapi.TYPE_STRING),
                     "name": openapi.Schema(type=openapi.TYPE_STRING),
@@ -55,5 +80,5 @@ class SchoolSerializer(serializers.ModelSerializer):
                     "dual_class": openapi.Schema(type=openapi.TYPE_STRING),
                     "nature": openapi.Schema(type=openapi.TYPE_STRING),
                     "level": openapi.Schema(type=openapi.TYPE_STRING),
-                }
+                },
             )

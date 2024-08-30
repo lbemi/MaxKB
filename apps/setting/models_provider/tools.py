@@ -17,7 +17,7 @@ def get_model_by_id(_id, user_id):
     model = QuerySet(Model).filter(id=_id).first()
     if model is None:
         raise Exception("模型不存在")
-    if model.permission_type == 'PRIVATE' and str(model.user_id) != str(user_id):
+    if model.permission_type == "PRIVATE" and str(model.user_id) != str(user_id):
         raise Exception(f"无权限使用此模型:{model.name}")
     return model
 

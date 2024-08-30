@@ -11,20 +11,20 @@ from langchain_openai.chat_models.base import _convert_delta_to_message_chunk
 class BaseChatOpenAI(ChatOpenAI):
 
     def get_last_generation_info(self) -> Optional[Dict[str, Any]]:
-        return self.__dict__.get('_last_generation_info')
+        return self.__dict__.get("_last_generation_info")
 
     def get_num_tokens_from_messages(self, messages: List[BaseMessage]) -> int:
-        return self.get_last_generation_info().get('prompt_tokens', 0)
+        return self.get_last_generation_info().get("prompt_tokens", 0)
 
     def get_num_tokens(self, text: str) -> int:
-        return self.get_last_generation_info().get('completion_tokens', 0)
+        return self.get_last_generation_info().get("completion_tokens", 0)
 
     def _stream(
-            self,
-            messages: List[BaseMessage],
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForLLMRun] = None,
-            **kwargs: Any,
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
         kwargs["stream"] = True
         kwargs["stream_options"] = {"include_usage": True}
@@ -42,10 +42,15 @@ class BaseChatOpenAI(ChatOpenAI):
             for chunk in response:
                 if not isinstance(chunk, dict):
                     chunk = chunk.model_dump()
-                if (len(chunk["choices"]) == 0 or chunk["choices"][0]["finish_reason"] == "length" or
-                    chunk["choices"][0]["finish_reason"] == "stop") and chunk.get("usage") is not None:
+                if (
+                    len(chunk["choices"]) == 0
+                    or chunk["choices"][0]["finish_reason"] == "length"
+                    or chunk["choices"][0]["finish_reason"] == "stop"
+                ) and chunk.get("usage") is not None:
                     if token_usage := chunk.get("usage"):
-                        self.__dict__.setdefault('_last_generation_info', {}).update(token_usage)
+                        self.__dict__.setdefault("_last_generation_info", {}).update(
+                            token_usage
+                        )
                         logprobs = None
                         continue
                 else:

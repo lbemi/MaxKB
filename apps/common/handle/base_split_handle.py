@@ -16,5 +16,13 @@ class BaseSplitHandle(ABC):
         pass
 
     @abstractmethod
-    def handle(self, file, pattern_list: List, with_filter: bool, limit: int, get_buffer, save_image):
+    def handle(
+        self,
+        file,
+        pattern_list: List,
+        with_filter: bool,
+        limit: int,
+        get_buffer,
+        save_image,
+    ):
         pass

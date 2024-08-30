@@ -14,14 +14,19 @@ from common.mixins.api_mixin import ApiMixin
 class ValidApi(ApiMixin):
     @staticmethod
     def get_request_params_api():
-        return [openapi.Parameter(name='valid_type',
-                                  in_=openapi.IN_PATH,
-                                  type=openapi.TYPE_STRING,
-                                  required=True,
-                                  description='校验类型:application|dataset|user'),
-                openapi.Parameter(name='valid_count',
-                                  in_=openapi.IN_PATH,
-                                  type=openapi.TYPE_STRING,
-                                  required=True,
-                                  description='校验数量')
-                ]
+        return [
+            openapi.Parameter(
+                name="valid_type",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="校验类型:application|dataset|user",
+            ),
+            openapi.Parameter(
+                name="valid_count",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="校验数量",
+            ),
+        ]

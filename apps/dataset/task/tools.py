@@ -24,15 +24,26 @@ def get_save_handler(dataset_id, selector):
     def handler(child_link: ChildLink, response: Fork.Response):
         if response.status == 200:
             try:
-                document_name = child_link.tag.text if child_link.tag is not None and len(
-                    child_link.tag.text.strip()) > 0 else child_link.url
-                paragraphs = get_split_model('web.md').parse(response.content)
-                DocumentSerializers.Create(data={'dataset_id': dataset_id}).save(
-                    {'name': document_name, 'paragraphs': paragraphs,
-                     'meta': {'source_url': child_link.url, 'selector': selector},
-                     'type': Type.web}, with_valid=True)
+                document_name = (
+                    child_link.tag.text
+                    if child_link.tag is not None
+                    and len(child_link.tag.text.strip()) > 0
+                    else child_link.url
+                )
+                paragraphs = get_split_model("web.md").parse(response.content)
+                DocumentSerializers.Create(data={"dataset_id": dataset_id}).save(
+                    {
+                        "name": document_name,
+                        "paragraphs": paragraphs,
+                        "meta": {"source_url": child_link.url, "selector": selector},
+                        "type": Type.web,
+                    },
+                    with_valid=True,
+                )
             except Exception as e:
-                logging.getLogger("max_kb_error").error(f'{str(e)}:{traceback.format_exc()}')
+                logging.getLogger("max_kb_error").error(
+                    f"{str(e)}:{traceback.format_exc()}"
+                )
 
     return handler
 
@@ -43,20 +54,29 @@ def get_sync_web_document_handler(dataset_id):
     def handler(source_url: str, selector, response: Fork.Response):
         if response.status == 200:
             try:
-                paragraphs = get_split_model('web.md').parse(response.content)
+                paragraphs = get_split_model("web.md").parse(response.content)
                 # 插入
-                DocumentSerializers.Create(data={'dataset_id': dataset_id}).save(
-                    {'name': source_url[0:128], 'paragraphs': paragraphs,
-                     'meta': {'source_url': source_url, 'selector': selector},
-                     'type': Type.web}, with_valid=True)
+                DocumentSerializers.Create(data={"dataset_id": dataset_id}).save(
+                    {
+                        "name": source_url[0:128],
+                        "paragraphs": paragraphs,
+                        "meta": {"source_url": source_url, "selector": selector},
+                        "type": Type.web,
+                    },
+                    with_valid=True,
+                )
             except Exception as e:
-                logging.getLogger("max_kb_error").error(f'{str(e)}:{traceback.format_exc()}')
+                logging.getLogger("max_kb_error").error(
+                    f"{str(e)}:{traceback.format_exc()}"
+                )
         else:
-            Document(name=source_url[0:128],
-                     dataset_id=dataset_id,
-                     meta={'source_url': source_url, 'selector': selector},
-                     type=Type.web,
-                     char_length=0,
-                     status=Status.error).save()
+            Document(
+                name=source_url[0:128],
+                dataset_id=dataset_id,
+                meta={"source_url": source_url, "selector": selector},
+                type=Type.web,
+                char_length=0,
+                status=Status.error,
+            ).save()
 
     return handler

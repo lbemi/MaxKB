@@ -24,19 +24,41 @@ def to_result(key, args, parent_key=None):
     :param parent_key 父key
     :return: 接口响应对象
     """
-    error_detail = list(filter(
-        lambda d: True if isinstance(d, ErrorDetail) else True if isinstance(d, dict) and len(
-            d.keys()) > 0 else False,
-        (args[0] if len(args) > 0 else {key: [ErrorDetail('未知异常', code='unknown')]}).get(key)))[0]
+    error_detail = list(
+        filter(
+            lambda d: (
+                True
+                if isinstance(d, ErrorDetail)
+                else True if isinstance(d, dict) and len(d.keys()) > 0 else False
+            ),
+            (
+                args[0]
+                if len(args) > 0
+                else {key: [ErrorDetail("未知异常", code="unknown")]}
+            ).get(key),
+        )
+    )[0]
 
     if isinstance(error_detail, dict):
-        return list(map(lambda k: to_result(k, args=[error_detail],
-                                            parent_key=key if parent_key is None else parent_key + '.' + key),
-                        error_detail.keys() if len(error_detail) > 0 else []))[0]
+        return list(
+            map(
+                lambda k: to_result(
+                    k,
+                    args=[error_detail],
+                    parent_key=key if parent_key is None else parent_key + "." + key,
+                ),
+                error_detail.keys() if len(error_detail) > 0 else [],
+            )
+        )[0]
 
-    return result.Result(500 if isinstance(error_detail.code, str) else error_detail.code,
-                         message=f"【{key if parent_key is None else parent_key + '.' + key}】为必填参数" if str(
-                             error_detail) == "This field is required." else error_detail)
+    return result.Result(
+        500 if isinstance(error_detail.code, str) else error_detail.code,
+        message=(
+            f"【{key if parent_key is None else parent_key + '.' + key}】为必填参数"
+            if str(error_detail) == "This field is required."
+            else error_detail
+        ),
+    )
 
 
 def validation_error_to_result(exc: ValidationError):
@@ -86,6 +108,6 @@ def handle_exception(exc, context):
     if issubclass(exception_class, APIException):
         return result.error(exc.detail)
     if response is None:
-        logging.getLogger("max_kb_error").error(f'{str(exc)}:{traceback.format_exc()}')
+        logging.getLogger("max_kb_error").error(f"{str(exc)}:{traceback.format_exc()}")
         return result.error(str(exc))
     return response

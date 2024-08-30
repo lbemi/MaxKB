@@ -15,4 +15,4 @@ class AppModelMixin(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['create_time']
+        ordering = ["create_time"]

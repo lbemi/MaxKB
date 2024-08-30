@@ -20,7 +20,9 @@ class MarkChunkHandle(IChunkHandle):
         result = []
         for chunk in chunk_list:
             base_chunk = re.split(split_chunk_pattern, chunk)
-            base_chunk = [chunk.strip() for chunk in base_chunk if len(chunk.strip()) > 0]
+            base_chunk = [
+                chunk.strip() for chunk in base_chunk if len(chunk.strip()) > 0
+            ]
             result_chunk = []
             for c in base_chunk:
                 if len(result_chunk) == 0:

@@ -1,0 +1,36 @@
+
+FROM registry.yunling.org/node:18-alpine3.18 as web-build
+COPY ui ui
+RUN cd ui && \
+    npm install && \
+    npm run build && \
+    rm -rf ./node_modules
+
+FROM registry.yunling.org/python:3.12-slim-bookworm
+
+RUN apt-get update && \
+    apt-get clean all  && \
+    rm -rf /var/lib/apt/lists/* \
+    rm -rf /opt/maxkb/app/ui
+COPY . /opt/app
+COPY /usr/local/share/model /usr/local/share/model
+COPY --from=web-build ui /opt/app/ui
+WORKDIR /opt/app
+RUN python3 -m venv /opt/py3 && \
+    pip install poetry --break-system-packages && \
+    poetry config virtualenvs.create false && \
+    . /opt/py3/bin/activate && \
+    if [ "$(uname -m)" = "x86_64" ]; then sed -i 's/^torch.*/torch = {version = "^2.2.1+cpu", source = "pytorch"}/g' pyproject.toml; fi && \
+    rm -rf /opt/app/poetry.lock && \
+    poetry install
+
+ENV LANG=en_US.UTF-8 \
+    PATH=/opt/py3/bin:$PATH
+
+RUN chmod 755 /opt/maxkb/app/installer/run-app.sh && \
+    cp -f /opt/maxkb/app/installer/run-app.sh /usr/bin/run-app.sh
+
+EXPOSE 8080
+
+ENTRYPOINT ["bash", "-c"]
+CMD [ "/usr/bin/run-app.sh" ]

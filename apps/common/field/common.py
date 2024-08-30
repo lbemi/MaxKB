@@ -18,7 +18,7 @@ class ObjectField(serializers.Field):
         for model_type in self.model_type_list:
             if isinstance(data, model_type):
                 return data
-        self.fail('message类型错误', value=data)
+        self.fail("message类型错误", value=data)
 
     def to_representation(self, value):
         return value
@@ -31,7 +31,7 @@ class InstanceField(serializers.Field):
 
     def to_internal_value(self, data):
         if not isinstance(data, self.model_type):
-            self.fail('message类型错误', value=data)
+            self.fail("message类型错误", value=data)
         return data
 
     def to_representation(self, value):
@@ -42,7 +42,7 @@ class FunctionField(serializers.Field):
 
     def to_internal_value(self, data):
         if not callable(data):
-            self.fail('不是一个函數', value=data)
+            self.fail("不是一个函數", value=data)
         return data
 
     def to_representation(self, value):

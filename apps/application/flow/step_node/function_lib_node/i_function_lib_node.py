@@ -18,30 +18,44 @@ from function_lib.models.function import FunctionLib
 
 
 class InputField(serializers.Serializer):
-    name = serializers.CharField(required=True, error_messages=ErrMessage.char('变量名'))
-    value = ObjectField(required=True, error_messages=ErrMessage.char("变量值"), model_type_list=[str, list])
+    name = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("变量名")
+    )
+    value = ObjectField(
+        required=True,
+        error_messages=ErrMessage.char("变量值"),
+        model_type_list=[str, list],
+    )
 
 
 class FunctionLibNodeParamsSerializer(serializers.Serializer):
-    function_lib_id = serializers.UUIDField(required=True, error_messages=ErrMessage.uuid('函数库id'))
+    function_lib_id = serializers.UUIDField(
+        required=True, error_messages=ErrMessage.uuid("函数库id")
+    )
     input_field_list = InputField(required=True, many=True)
-    is_result = serializers.BooleanField(required=False, error_messages=ErrMessage.boolean('是否返回内容'))
+    is_result = serializers.BooleanField(
+        required=False, error_messages=ErrMessage.boolean("是否返回内容")
+    )
 
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=True)
-        f_lib = QuerySet(FunctionLib).filter(id=self.data.get('function_lib_id')).first()
+        f_lib = (
+            QuerySet(FunctionLib).filter(id=self.data.get("function_lib_id")).first()
+        )
         if f_lib is None:
-            raise Exception('函数库已被删除')
+            raise Exception("函数库已被删除")
 
 
 class IFunctionLibNode(INode):
-    type = 'function-lib-node'
+    type = "function-lib-node"
 
     def get_node_params_serializer_class(self) -> Type[serializers.Serializer]:
         return FunctionLibNodeParamsSerializer
 
     def _run(self):
-        return self.execute(**self.node_params_serializer.data, **self.flow_params_serializer.data)
+        return self.execute(
+            **self.node_params_serializer.data, **self.flow_params_serializer.data
+        )
 
     def execute(self, function_lib_id, input_field_list, **kwargs) -> NodeResult:
         pass

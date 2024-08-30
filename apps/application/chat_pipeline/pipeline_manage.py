@@ -18,10 +18,10 @@ class PipelineManage:
         # 步骤执行器
         self.step_list = [step() for step in step_list]
         # 上下文
-        self.context = {'message_tokens': 0, 'answer_tokens': 0}
+        self.context = {"message_tokens": 0, "answer_tokens": 0}
 
     def run(self, context: Dict = None):
-        self.context['start_time'] = time.time()
+        self.context["start_time"] = time.time()
         if context is not None:
             for key, value in context.items():
                 self.context[key] = value
@@ -29,9 +29,17 @@ class PipelineManage:
             step.run(self)
 
     def get_details(self):
-        return reduce(lambda x, y: {**x, **y}, [{item.get('step_type'): item} for item in
-                                                filter(lambda r: r is not None,
-                                                       [row.get_details(self) for row in self.step_list])], {})
+        return reduce(
+            lambda x, y: {**x, **y},
+            [
+                {item.get("step_type"): item}
+                for item in filter(
+                    lambda r: r is not None,
+                    [row.get_details(self) for row in self.step_list],
+                )
+            ],
+            {},
+        )
 
     class builder:
         def __init__(self):

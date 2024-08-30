@@ -7,72 +7,124 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Jobs',
+            name="Jobs",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(blank=True, max_length=255, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('requirement', models.TextField(blank=True, null=True)),
-                ('tag', models.CharField(blank=True, max_length=255, null=True)),
-                ('professional', models.CharField(blank=True, max_length=255, null=True)),
-                ('is_embedding', models.IntegerField(blank=True, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(blank=True, max_length=255, null=True)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("requirement", models.TextField(blank=True, null=True)),
+                ("tag", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "professional",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("is_embedding", models.IntegerField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'jobs',
+                "db_table": "jobs",
             },
         ),
         migrations.CreateModel(
-            name='Professional',
+            name="Professional",
             fields=[
-                ('id', models.CharField(max_length=10, primary_key=True, serialize=False)),
-                ('school_id', models.CharField(max_length=10)),
-                ('special_id', models.CharField(blank=True, max_length=10, null=True)),
-                ('nation_feature', models.CharField(blank=True, max_length=255, null=True)),
-                ('province_feature', models.CharField(blank=True, max_length=255, null=True)),
-                ('is_important', models.CharField(blank=True, max_length=255, null=True)),
-                ('limit_year', models.CharField(blank=True, max_length=255, null=True)),
-                ('year', models.CharField(blank=True, max_length=255, null=True)),
-                ('level3_weight', models.CharField(blank=True, max_length=2, null=True)),
-                ('nation_first_class', models.CharField(blank=True, max_length=255, null=True)),
-                ('xueke_rank_score', models.CharField(blank=True, max_length=255, null=True)),
-                ('is_video', models.IntegerField(blank=True, null=True)),
-                ('special_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('special_type', models.CharField(blank=True, max_length=255, null=True)),
-                ('type_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('level3_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('level3_code', models.CharField(blank=True, max_length=255, null=True)),
-                ('level2_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('level2_id', models.CharField(blank=True, max_length=8, null=True)),
-                ('level2_code', models.CharField(blank=True, max_length=255, null=True)),
-                ('code', models.CharField(blank=True, max_length=255, null=True)),
-                ('course', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.CharField(max_length=10, primary_key=True, serialize=False),
+                ),
+                ("school_id", models.CharField(max_length=10)),
+                ("special_id", models.CharField(blank=True, max_length=10, null=True)),
+                (
+                    "nation_feature",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "province_feature",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "is_important",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("limit_year", models.CharField(blank=True, max_length=255, null=True)),
+                ("year", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "level3_weight",
+                    models.CharField(blank=True, max_length=2, null=True),
+                ),
+                (
+                    "nation_first_class",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "xueke_rank_score",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("is_video", models.IntegerField(blank=True, null=True)),
+                (
+                    "special_name",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "special_type",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("type_name", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "level3_name",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "level3_code",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "level2_name",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("level2_id", models.CharField(blank=True, max_length=8, null=True)),
+                (
+                    "level2_code",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("code", models.CharField(blank=True, max_length=255, null=True)),
+                ("course", models.TextField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'professional',
+                "db_table": "professional",
             },
         ),
         migrations.CreateModel(
-            name='School',
+            name="School",
             fields=[
-                ('code', models.CharField(max_length=20, primary_key=True, serialize=False)),
-                ('name', models.CharField(blank=True, max_length=255, null=True)),
-                ('f985', models.CharField(blank=True, max_length=255, null=True)),
-                ('f211', models.CharField(blank=True, max_length=255, null=True)),
-                ('p', models.CharField(blank=True, max_length=255, null=True)),
-                ('c', models.CharField(blank=True, max_length=255, null=True)),
-                ('qj', models.CharField(blank=True, max_length=255, null=True)),
-                ('answer_url', models.CharField(blank=True, max_length=255, null=True)),
-                ('dual_class', models.CharField(blank=True, max_length=255, null=True)),
-                ('nature', models.CharField(blank=True, max_length=255, null=True)),
-                ('level', models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "code",
+                    models.CharField(max_length=20, primary_key=True, serialize=False),
+                ),
+                ("name", models.CharField(blank=True, max_length=255, null=True)),
+                ("f985", models.CharField(blank=True, max_length=255, null=True)),
+                ("f211", models.CharField(blank=True, max_length=255, null=True)),
+                ("p", models.CharField(blank=True, max_length=255, null=True)),
+                ("c", models.CharField(blank=True, max_length=255, null=True)),
+                ("qj", models.CharField(blank=True, max_length=255, null=True)),
+                ("answer_url", models.CharField(blank=True, max_length=255, null=True)),
+                ("dual_class", models.CharField(blank=True, max_length=255, null=True)),
+                ("nature", models.CharField(blank=True, max_length=255, null=True)),
+                ("level", models.CharField(blank=True, max_length=255, null=True)),
             ],
             options={
-                'db_table': 'school',
+                "db_table": "school",
             },
         ),
     ]

@@ -12,6 +12,9 @@ from .listener_manage import *
 
 
 def run():
-    QuerySet(Document).filter(status__in=[Status.embedding, Status.queue_up]).update(**{'status': Status.error})
-    QuerySet(Model).filter(status=setting.models.Status.DOWNLOAD).update(status=setting.models.Status.ERROR,
-                                                                         meta={'message': "下载程序被中断,请重试"})
+    QuerySet(Document).filter(status__in=[Status.embedding, Status.queue_up]).update(
+        **{"status": Status.error}
+    )
+    QuerySet(Model).filter(status=setting.models.Status.DOWNLOAD).update(
+        status=setting.models.Status.ERROR, meta={"message": "下载程序被中断,请重试"}
+    )

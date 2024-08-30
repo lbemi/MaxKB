@@ -25,9 +25,13 @@ class ImageSerializer(serializers.Serializer):
         if with_valid:
             self.is_valid(raise_exception=True)
         image_id = uuid.uuid1()
-        image = Image(id=image_id, image=self.data.get('image').read(), image_name=self.data.get('image').name)
+        image = Image(
+            id=image_id,
+            image=self.data.get("image").read(),
+            image_name=self.data.get("image").name,
+        )
         image.save()
-        return f'/api/image/{image_id}'
+        return f"/api/image/{image_id}"
 
     class Operate(serializers.Serializer):
         id = serializers.UUIDField(required=True)
@@ -35,10 +39,14 @@ class ImageSerializer(serializers.Serializer):
         def get(self, with_valid=True):
             if with_valid:
                 self.is_valid(raise_exception=True)
-            image_id = self.data.get('id')
+            image_id = self.data.get("id")
             image = QuerySet(Image).filter(id=image_id).first()
             if image is None:
                 raise NotFound404(404, "不存在的图片")
-            if image.image_name.endswith('.svg'):
-                return HttpResponse(image.image, status=200, headers={'Content-Type': 'image/svg+xml'})
-            return HttpResponse(image.image, status=200, headers={'Content-Type': 'image/png'})
+            if image.image_name.endswith(".svg"):
+                return HttpResponse(
+                    image.image, status=200, headers={"Content-Type": "image/svg+xml"}
+                )
+            return HttpResponse(
+                image.image, status=200, headers={"Content-Type": "image/png"}
+            )

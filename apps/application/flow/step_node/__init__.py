@@ -15,8 +15,16 @@ from .direct_reply_node import *
 from .function_lib_node import *
 from .function_node import *
 
-node_list = [BaseStartStepNode, BaseChatNode, BaseSearchDatasetNode, BaseQuestionNode, BaseConditionNode, BaseReplyNode,
-             BaseFunctionNodeNode, BaseFunctionLibNodeNode]
+node_list = [
+    BaseStartStepNode,
+    BaseChatNode,
+    BaseSearchDatasetNode,
+    BaseQuestionNode,
+    BaseConditionNode,
+    BaseReplyNode,
+    BaseFunctionNodeNode,
+    BaseFunctionLibNodeNode,
+]
 
 
 def get_node(node_type):

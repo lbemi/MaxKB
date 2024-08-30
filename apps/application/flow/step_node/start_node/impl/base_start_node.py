@@ -18,16 +18,21 @@ class BaseStartStepNode(IStarNode):
         """
         开始节点 初始化全局变量
         """
-        return NodeResult({'question': question},
-                          {'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'start_time': time.time()})
+        return NodeResult(
+            {"question": question},
+            {
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "start_time": time.time(),
+            },
+        )
 
     def get_details(self, index: int, **kwargs):
         return {
-            'name': self.node.properties.get('stepName'),
+            "name": self.node.properties.get("stepName"),
             "index": index,
-            "question": self.context.get('question'),
-            'run_time': self.context.get('run_time'),
-            'type': self.node.type,
-            'status': self.status,
-            'err_message': self.err_message
+            "question": self.context.get("question"),
+            "run_time": self.context.get("run_time"),
+            "type": self.node.type,
+            "status": self.status,
+            "err_message": self.err_message,
         }

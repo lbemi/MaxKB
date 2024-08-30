@@ -6,17 +6,15 @@
     @date：2024/7/9 18:47
     @desc:
 """
-USER_TOKEN_AUTH = 'common.auth.handle.impl.user_token.UserToken'
+USER_TOKEN_AUTH = "common.auth.handle.impl.user_token.UserToken"
 
-PUBLIC_ACCESS_TOKEN_AUTH = 'common.auth.handle.impl.public_access_token.PublicAccessToken'
+PUBLIC_ACCESS_TOKEN_AUTH = (
+    "common.auth.handle.impl.public_access_token.PublicAccessToken"
+)
 
-APPLICATION_KEY_AUTH = 'common.auth.handle.impl.application_key.ApplicationKey'
+APPLICATION_KEY_AUTH = "common.auth.handle.impl.application_key.ApplicationKey"
 
 XPACK_LICENSE_IS_VALID = True
 IS_XPACK = True
 
-AUTH_HANDLES = [
-    USER_TOKEN_AUTH,
-    PUBLIC_ACCESS_TOKEN_AUTH,
-    APPLICATION_KEY_AUTH
-]
+AUTH_HANDLES = [USER_TOKEN_AUTH, PUBLIC_ACCESS_TOKEN_AUTH, APPLICATION_KEY_AUTH]

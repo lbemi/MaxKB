@@ -30,10 +30,19 @@ def sub_array(array: List, item_num=10):
 
 
 def query_params_to_single_dict(query_params: Dict):
-    return reduce(lambda x, y: {**x, **y}, list(
-        filter(lambda item: item is not None, [({key: value} if value is not None and len(value) > 0 else None) for
-                                               key, value in
-                                               query_params.items()])), {})
+    return reduce(
+        lambda x, y: {**x, **y},
+        list(
+            filter(
+                lambda item: item is not None,
+                [
+                    ({key: value} if value is not None and len(value) > 0 else None)
+                    for key, value in query_params.items()
+                ],
+            )
+        ),
+        {},
+    )
 
 
 def get_exec_method(clazz_: str, method_: str):
@@ -43,7 +52,7 @@ def get_exec_method(clazz_: str, method_: str):
     :param method_:  执行函数
     :return: 执行函数
     """
-    clazz_split = clazz_.split('.')
+    clazz_split = clazz_.split(".")
     clazz_name = clazz_split[-1]
     package = ".".join([clazz_split[index] for index in range(len(clazz_split) - 1)])
     package_model = importlib.import_module(package)
@@ -76,11 +85,17 @@ def post(post_function):
 def valid_license(model=None, count=None, message=None):
     def inner(func):
         def run(*args, **kwargs):
-            if (not (settings.XPACK_LICENSE_IS_VALID if hasattr(settings,
-                                                                'XPACK_LICENSE_IS_VALID') else None)
-                    and QuerySet(
-                        model).count() >= count):
-                error = message or f'超出限制{count},请联系我们（https://fit2cloud.com/）。'
+            if (
+                not (
+                    settings.XPACK_LICENSE_IS_VALID
+                    if hasattr(settings, "XPACK_LICENSE_IS_VALID")
+                    else None
+                )
+                and QuerySet(model).count() >= count
+            ):
+                error = (
+                    message or f"超出限制{count},请联系我们（https://fit2cloud.com/）。"
+                )
                 raise AppApiException(400, error)
             return func(*args, **kwargs)
 

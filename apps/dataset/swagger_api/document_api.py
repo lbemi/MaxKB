@@ -18,11 +18,19 @@ class DocumentApi(ApiMixin):
             return openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    'id_list': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING),
-                                              title="主键id列表",
-                                              description="主键id列表"),
-                    'hit_handling_method': openapi.Schema(type=openapi.TYPE_STRING, title="命中处理方式",
-                                                          description="directly_return|optimization"),
-                    'directly_return_similarity': openapi.Schema(type=openapi.TYPE_NUMBER, title="直接返回相似度")
-                }
+                    "id_list": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_STRING),
+                        title="主键id列表",
+                        description="主键id列表",
+                    ),
+                    "hit_handling_method": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        title="命中处理方式",
+                        description="directly_return|optimization",
+                    ),
+                    "directly_return_similarity": openapi.Schema(
+                        type=openapi.TYPE_NUMBER, title="直接返回相似度"
+                    ),
+                },
             )

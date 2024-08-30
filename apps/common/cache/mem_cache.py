@@ -34,10 +34,12 @@ class MemCache(LocMemCache):
         delete_keys = []
         for key in self._cache.keys():
             value = self._cache.get(key)
-            if (hasattr(value,
-                        'application') and value.application is not None and value.application.id is not None and
-                    str(
-                        value.application.id) == application_id):
+            if (
+                hasattr(value, "application")
+                and value.application is not None
+                and value.application.id is not None
+                and str(value.application.id) == application_id
+            ):
                 delete_keys.append(key)
         for key in delete_keys:
             self._delete(key)

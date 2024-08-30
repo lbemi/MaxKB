@@ -24,34 +24,49 @@ class IResetProblemStep(IBaseChatPipelineStep):
     class InstanceSerializer(serializers.Serializer):
         # 问题文本
         problem_text = serializers.CharField(
-            required=True, error_messages=ErrMessage.float("问题文本"))
+            required=True, error_messages=ErrMessage.float("问题文本")
+        )
         # 历史对答
-        history_chat_record = serializers.ListField(child=InstanceField(model_type=ChatRecord, required=True),
-                                                    error_messages=ErrMessage.list("历史对答"))
+        history_chat_record = serializers.ListField(
+            child=InstanceField(model_type=ChatRecord, required=True),
+            error_messages=ErrMessage.list("历史对答"),
+        )
         # 大语言模型
         chat_model = ModelField(
-            required=False, allow_null=True, error_messages=ErrMessage.base("大语言模型"))
+            required=False,
+            allow_null=True,
+            error_messages=ErrMessage.base("大语言模型"),
+        )
 
-    def get_step_serializer(self, manage: PipelineManage) -> Type[serializers.Serializer]:
+    def get_step_serializer(
+        self, manage: PipelineManage
+    ) -> Type[serializers.Serializer]:
         return self.InstanceSerializer
 
     def _run(self, manage: PipelineManage):
-        padding_problem = self.execute(**self.context.get('step_args'))
+        padding_problem = self.execute(**self.context.get("step_args"))
         # 用户输入问题
-        source_problem_text = self.context.get('step_args').get('problem_text')
-        self.context['problem_text'] = source_problem_text
-        self.context['padding_problem_text'] = padding_problem
-        manage.context['problem_text'] = source_problem_text
-        manage.context['padding_problem_text'] = padding_problem
+        source_problem_text = self.context.get("step_args").get("problem_text")
+        self.context["problem_text"] = source_problem_text
+        self.context["padding_problem_text"] = padding_problem
+        manage.context["problem_text"] = source_problem_text
+        manage.context["padding_problem_text"] = padding_problem
         # 累加tokens
-        manage.context['message_tokens'] = manage.context['message_tokens'] + \
-            self.context.get('message_tokens')
-        manage.context['answer_tokens'] = manage.context['answer_tokens'] + \
-            self.context.get('answer_tokens')
+        manage.context["message_tokens"] = manage.context[
+            "message_tokens"
+        ] + self.context.get("message_tokens")
+        manage.context["answer_tokens"] = manage.context[
+            "answer_tokens"
+        ] + self.context.get("answer_tokens")
 
         print("***********manage.context['message_tokens']", manage.context)
 
     @abstractmethod
-    def execute(self, problem_text: str, history_chat_record: List[ChatRecord] = None, chat_model: BaseChatModel = None,
-                **kwargs):
+    def execute(
+        self,
+        problem_text: str,
+        history_chat_record: List[ChatRecord] = None,
+        chat_model: BaseChatModel = None,
+        **kwargs
+    ):
         pass

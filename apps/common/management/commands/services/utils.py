@@ -26,7 +26,9 @@ class ServicesUtil(object):
 
     def start_and_watch(self):
         logging.info(time.ctime())
-        logging.info(f'MaxKB version {__version__}, more see https://www.jumpserver.org')
+        logging.info(
+            f"MaxKB version {__version__}, more see https://www.jumpserver.org"
+        )
         self.start()
         if self.run_daemon:
             self.show_status()
@@ -60,7 +62,7 @@ class ServicesUtil(object):
                     break
                 time.sleep(self.check_interval)
             except KeyboardInterrupt:
-                print('Start stop services')
+                print("Start stop services")
                 break
         self.clean_up()
 
@@ -72,6 +74,7 @@ class ServicesUtil(object):
                 self.EXIT_EVENT.set()
                 return True
         return False
+
     # -- end watch --
 
     def clean_up(self):
@@ -116,20 +119,20 @@ class ServicesUtil(object):
 
     @property
     def daemon_pid_filepath(self):
-        return os.path.join(TMP_DIR, 'mk.pid')
+        return os.path.join(TMP_DIR, "mk.pid")
 
     @property
     def daemon_log_filepath(self):
-        return os.path.join(LOG_DIR, 'mk.log')
+        return os.path.join(LOG_DIR, "mk.log")
 
     @property
     def daemon_context(self):
-        daemon_log_file = open(self.daemon_log_filepath, 'a')
+        daemon_log_file = open(self.daemon_log_filepath, "a")
         context = daemon.DaemonContext(
             pidfile=pidfile.TimeoutPIDLockFile(self.daemon_pid_filepath),
             signal_map={
                 signal.SIGTERM: lambda x, y: self.clean_up(),
-                signal.SIGHUP: 'terminate',
+                signal.SIGHUP: "terminate",
             },
             stdout=daemon_log_file,
             stderr=daemon_log_file,
@@ -137,4 +140,5 @@ class ServicesUtil(object):
             detach_process=True,
         )
         return context
+
     # -- end daemon --

@@ -22,7 +22,19 @@ from .is_not_null_compare import *
 from .is_null_compare import *
 from .not_contain_compare import *
 
-compare_handle_list = [GECompare(), GTCompare(), ContainCompare(), EqualCompare(), LTCompare(), LECompare(),
-                       LenLECompare(), LenGECompare(), LenEqualCompare(), LenGTCompare(), LenLTCompare(),
-                       IsNullCompare(),
-                       IsNotNullCompare(), NotContainCompare()]
+compare_handle_list = [
+    GECompare(),
+    GTCompare(),
+    ContainCompare(),
+    EqualCompare(),
+    LTCompare(),
+    LECompare(),
+    LenLECompare(),
+    LenGECompare(),
+    LenEqualCompare(),
+    LenGTCompare(),
+    LenLTCompare(),
+    IsNullCompare(),
+    IsNotNullCompare(),
+    NotContainCompare(),
+]

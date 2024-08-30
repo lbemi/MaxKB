@@ -14,7 +14,7 @@ from application.flow.step_node.condition_node.compare.compare import Compare
 class GTCompare(Compare):
 
     def support(self, node_id, fields: List[str], source_value, compare, target_value):
-        if compare == 'gt':
+        if compare == "gt":
             return True
 
     def compare(self, source_value, compare, target_value):

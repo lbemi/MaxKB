@@ -6,20 +6,20 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0001_initial'),
+        ("school", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='jobs',
-            options={'managed': False},
+            name="jobs",
+            options={"managed": False},
         ),
         migrations.AlterModelOptions(
-            name='professional',
-            options={'managed': False},
+            name="professional",
+            options={"managed": False},
         ),
         migrations.AlterModelOptions(
-            name='school',
-            options={'managed': False},
+            name="school",
+            options={"managed": False},
         ),
     ]

@@ -14,7 +14,7 @@ work_thread_pool = ThreadPoolExecutor(5)
 
 embedding_thread_pool = ThreadPoolExecutor(3)
 
-memory_cache = LocMemCache('task', {"OPTIONS": {"MAX_ENTRIES": 1000}})
+memory_cache = LocMemCache("task", {"OPTIONS": {"MAX_ENTRIES": 1000}})
 
 
 def poxy(poxy_function):

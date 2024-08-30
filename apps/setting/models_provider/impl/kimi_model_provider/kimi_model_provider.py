@@ -9,23 +9,39 @@
 import os
 
 from common.util.file_util import get_file_content
-from setting.models_provider.base_model_provider import IModelProvider, ModelProvideInfo, ModelInfo, \
-    ModelTypeConst, ModelInfoManage
-from setting.models_provider.impl.kimi_model_provider.credential.llm import KimiLLMModelCredential
+from setting.models_provider.base_model_provider import (
+    IModelProvider,
+    ModelProvideInfo,
+    ModelInfo,
+    ModelTypeConst,
+    ModelInfoManage,
+)
+from setting.models_provider.impl.kimi_model_provider.credential.llm import (
+    KimiLLMModelCredential,
+)
 from setting.models_provider.impl.kimi_model_provider.model.llm import KimiChatModel
 from smartdoc.conf import PROJECT_DIR
 
 kimi_llm_model_credential = KimiLLMModelCredential()
 
-moonshot_v1_8k = ModelInfo('moonshot-v1-8k', '', ModelTypeConst.LLM, kimi_llm_model_credential,
-                           KimiChatModel)
-moonshot_v1_32k = ModelInfo('moonshot-v1-32k', '', ModelTypeConst.LLM, kimi_llm_model_credential,
-                            KimiChatModel)
-moonshot_v1_128k = ModelInfo('moonshot-v1-128k', '', ModelTypeConst.LLM, kimi_llm_model_credential,
-                             KimiChatModel)
+moonshot_v1_8k = ModelInfo(
+    "moonshot-v1-8k", "", ModelTypeConst.LLM, kimi_llm_model_credential, KimiChatModel
+)
+moonshot_v1_32k = ModelInfo(
+    "moonshot-v1-32k", "", ModelTypeConst.LLM, kimi_llm_model_credential, KimiChatModel
+)
+moonshot_v1_128k = ModelInfo(
+    "moonshot-v1-128k", "", ModelTypeConst.LLM, kimi_llm_model_credential, KimiChatModel
+)
 
-model_info_manage = ModelInfoManage.builder().append_model_info(moonshot_v1_8k).append_model_info(
-    moonshot_v1_32k).append_default_model_info(moonshot_v1_128k).append_default_model_info(moonshot_v1_8k).build()
+model_info_manage = (
+    ModelInfoManage.builder()
+    .append_model_info(moonshot_v1_8k)
+    .append_model_info(moonshot_v1_32k)
+    .append_default_model_info(moonshot_v1_128k)
+    .append_default_model_info(moonshot_v1_8k)
+    .build()
+)
 
 
 class KimiModelProvider(IModelProvider):
@@ -37,6 +53,19 @@ class KimiModelProvider(IModelProvider):
         return 3
 
     def get_model_provide_info(self):
-        return ModelProvideInfo(provider='model_kimi_provider', name='Kimi', icon=get_file_content(
-            os.path.join(PROJECT_DIR, "apps", "setting", 'models_provider', 'impl', 'kimi_model_provider', 'icon',
-                         'kimi_icon_svg')))
+        return ModelProvideInfo(
+            provider="model_kimi_provider",
+            name="Kimi",
+            icon=get_file_content(
+                os.path.join(
+                    PROJECT_DIR,
+                    "apps",
+                    "setting",
+                    "models_provider",
+                    "impl",
+                    "kimi_model_provider",
+                    "icon",
+                    "kimi_icon_svg",
+                )
+            ),
+        )

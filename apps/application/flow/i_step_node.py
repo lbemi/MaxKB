@@ -21,21 +21,21 @@ from common.constants.authentication_type import AuthenticationType
 from common.field.common import InstanceField
 from common.util.field_message import ErrMessage
 
-chat_cache = cache.caches['chat_cache']
+chat_cache = cache.caches["chat_cache"]
 
 
 def write_context(step_variable: Dict, global_variable: Dict, node, workflow):
     if step_variable is not None:
         for key in step_variable:
             node.context[key] = step_variable[key]
-        if workflow.is_result() and 'answer' in step_variable:
-            answer = step_variable['answer']
+        if workflow.is_result() and "answer" in step_variable:
+            answer = step_variable["answer"]
             yield answer
             workflow.answer += answer
     if global_variable is not None:
         for key in global_variable:
             workflow.context[key] = global_variable[key]
-    node.context['run_time'] = time.time() - node.context['start_time']
+    node.context["run_time"] = time.time() - node.context["start_time"]
 
 
 class WorkFlowPostHandler:
@@ -44,86 +44,129 @@ class WorkFlowPostHandler:
         self.client_id = client_id
         self.client_type = client_type
 
-    def handler(self, chat_id,
-                chat_record_id,
-                answer,
-                workflow):
-        question = workflow.params['question']
+    def handler(self, chat_id, chat_record_id, answer, workflow):
+        question = workflow.params["question"]
         details = workflow.get_runtime_details()
-        message_tokens = sum([row.get('message_tokens') for row in details.values() if
-                              'message_tokens' in row and row.get('message_tokens') is not None])
-        answer_tokens = sum([row.get('answer_tokens') for row in details.values() if
-                             'answer_tokens' in row and row.get('answer_tokens') is not None])
-        chat_record = ChatRecord(id=chat_record_id,
-                                 chat_id=chat_id,
-                                 problem_text=question,
-                                 answer_text=answer,
-                                 details=details,
-                                 message_tokens=message_tokens,
-                                 answer_tokens=answer_tokens,
-                                 run_time=time.time() - workflow.context['start_time'],
-                                 index=0)
+        message_tokens = sum(
+            [
+                row.get("message_tokens")
+                for row in details.values()
+                if "message_tokens" in row and row.get("message_tokens") is not None
+            ]
+        )
+        answer_tokens = sum(
+            [
+                row.get("answer_tokens")
+                for row in details.values()
+                if "answer_tokens" in row and row.get("answer_tokens") is not None
+            ]
+        )
+        chat_record = ChatRecord(
+            id=chat_record_id,
+            chat_id=chat_id,
+            problem_text=question,
+            answer_text=answer,
+            details=details,
+            message_tokens=message_tokens,
+            answer_tokens=answer_tokens,
+            run_time=time.time() - workflow.context["start_time"],
+            index=0,
+        )
         self.chat_info.append_chat_record(chat_record, self.client_id)
         # 重新设置缓存
-        chat_cache.set(chat_id,
-                       self.chat_info, timeout=60 * 30)
+        chat_cache.set(chat_id, self.chat_info, timeout=60 * 30)
         if self.client_type == AuthenticationType.APPLICATION_ACCESS_TOKEN.value:
-            application_public_access_client = QuerySet(ApplicationPublicAccessClient).filter(id=self.client_id).first()
+            application_public_access_client = (
+                QuerySet(ApplicationPublicAccessClient)
+                .filter(id=self.client_id)
+                .first()
+            )
             if application_public_access_client is not None:
-                application_public_access_client.access_num = application_public_access_client.access_num + 1
-                application_public_access_client.intraday_access_num = application_public_access_client.intraday_access_num + 1
+                application_public_access_client.access_num = (
+                    application_public_access_client.access_num + 1
+                )
+                application_public_access_client.intraday_access_num = (
+                    application_public_access_client.intraday_access_num + 1
+                )
                 application_public_access_client.save()
 
 
 class NodeResult:
-    def __init__(self, node_variable: Dict, workflow_variable: Dict,
-                 _write_context=write_context):
+    def __init__(
+        self, node_variable: Dict, workflow_variable: Dict, _write_context=write_context
+    ):
         self._write_context = _write_context
         self.node_variable = node_variable
         self.workflow_variable = workflow_variable
 
     def write_context(self, node, workflow):
-        return self._write_context(self.node_variable, self.workflow_variable, node, workflow)
+        return self._write_context(
+            self.node_variable, self.workflow_variable, node, workflow
+        )
 
     def is_assertion_result(self):
-        return 'branch_id' in self.node_variable
+        return "branch_id" in self.node_variable
 
 
 class ReferenceAddressSerializer(serializers.Serializer):
-    node_id = serializers.CharField(required=True, error_messages=ErrMessage.char("节点id"))
+    node_id = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("节点id")
+    )
     fields = serializers.ListField(
-        child=serializers.CharField(required=True, error_messages=ErrMessage.char("节点字段")), required=True,
-        error_messages=ErrMessage.list("节点字段数组"))
+        child=serializers.CharField(
+            required=True, error_messages=ErrMessage.char("节点字段")
+        ),
+        required=True,
+        error_messages=ErrMessage.list("节点字段数组"),
+    )
 
 
 class FlowParamsSerializer(serializers.Serializer):
     # 历史对答
-    history_chat_record = serializers.ListField(child=InstanceField(model_type=ChatRecord, required=True),
-                                                error_messages=ErrMessage.list("历史对答"))
+    history_chat_record = serializers.ListField(
+        child=InstanceField(model_type=ChatRecord, required=True),
+        error_messages=ErrMessage.list("历史对答"),
+    )
 
-    question = serializers.CharField(required=True, error_messages=ErrMessage.list("用户问题"))
+    question = serializers.CharField(
+        required=True, error_messages=ErrMessage.list("用户问题")
+    )
 
-    chat_id = serializers.CharField(required=True, error_messages=ErrMessage.list("对话id"))
+    chat_id = serializers.CharField(
+        required=True, error_messages=ErrMessage.list("对话id")
+    )
 
-    chat_record_id = serializers.CharField(required=True, error_messages=ErrMessage.char("对话记录id"))
+    chat_record_id = serializers.CharField(
+        required=True, error_messages=ErrMessage.char("对话记录id")
+    )
 
-    stream = serializers.BooleanField(required=True, error_messages=ErrMessage.boolean("流式输出"))
+    stream = serializers.BooleanField(
+        required=True, error_messages=ErrMessage.boolean("流式输出")
+    )
 
-    client_id = serializers.CharField(required=False, error_messages=ErrMessage.char("客户端id"))
+    client_id = serializers.CharField(
+        required=False, error_messages=ErrMessage.char("客户端id")
+    )
 
-    client_type = serializers.CharField(required=False, error_messages=ErrMessage.char("客户端类型"))
+    client_type = serializers.CharField(
+        required=False, error_messages=ErrMessage.char("客户端类型")
+    )
 
-    user_id = serializers.UUIDField(required=True, error_messages=ErrMessage.uuid("用户id"))
-    re_chat = serializers.BooleanField(required=True, error_messages=ErrMessage.boolean("换个答案"))
+    user_id = serializers.UUIDField(
+        required=True, error_messages=ErrMessage.uuid("用户id")
+    )
+    re_chat = serializers.BooleanField(
+        required=True, error_messages=ErrMessage.boolean("换个答案")
+    )
 
 
 class INode:
     def __init__(self, node, workflow_params, workflow_manage):
         # 当前步骤上下文,用于存储当前步骤信息
         self.status = 200
-        self.err_message = ''
+        self.err_message = ""
         self.node = node
-        self.node_params = node.properties.get('node_data')
+        self.node_params = node.properties.get("node_data")
         self.workflow_params = workflow_params
         self.workflow_manage = workflow_manage
         self.node_params_serializer = None
@@ -140,8 +183,10 @@ class INode:
         if node_params_serializer_class is not None:
             self.node_params_serializer = node_params_serializer_class(data=node_params)
             self.node_params_serializer.is_valid(raise_exception=True)
-        if self.node.properties.get('status', 200) != 200:
-            raise ValidationError(ErrorDetail(f'节点{self.node.properties.get("stepName")} 不可用'))
+        if self.node.properties.get("status", 200) != 200:
+            raise ValidationError(
+                ErrorDetail(f'节点{self.node.properties.get("stepName")} 不可用')
+            )
 
     def get_reference_field(self, fields: List[str]):
         return self.get_field(self.context, fields)
@@ -177,9 +222,9 @@ class INode:
         :return: 执行结果
         """
         start_time = time.time()
-        self.context['start_time'] = start_time
+        self.context["start_time"] = start_time
         result = self._run()
-        self.context['run_time'] = time.time() - start_time
+        self.context["run_time"] = time.time() - start_time
         return result
 
     def _run(self):

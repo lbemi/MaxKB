@@ -8,7 +8,7 @@ import django
 from django.core import management
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_DIR = os.path.join(BASE_DIR, 'apps')
+APP_DIR = os.path.join(BASE_DIR, "apps")
 
 os.chdir(BASE_DIR)
 sys.path.insert(0, APP_DIR)
@@ -25,7 +25,8 @@ def collect_static():
     logging.info("Collect static files")
     try:
         management.call_command(
-            'collectstatic', '--no-input', '-c', verbosity=0, interactive=False)
+            "collectstatic", "--no-input", "-c", verbosity=0, interactive=False
+        )
         logging.info("Collect static files done")
     except:
         pass
@@ -38,31 +39,30 @@ def perform_db_migrate():
     logging.info("Check database structure change ...")
     logging.info("Migrate model change to database ...")
     try:
-        management.call_command('migrate')
+        management.call_command("migrate")
     except Exception as e:
-        logging.error('Perform migrate failed, exit', exc_info=True)
+        logging.error("Perform migrate failed, exit", exc_info=True)
         sys.exit(11)
 
 
 def start_services():
-    services = args.services if isinstance(
-        args.services, list) else [args.services]
+    services = args.services if isinstance(args.services, list) else [args.services]
     start_args = []
     if args.daemon:
-        start_args.append('--daemon')
+        start_args.append("--daemon")
     if args.force:
-        start_args.append('--force')
+        start_args.append("--force")
     if args.worker:
-        start_args.extend(['--worker', str(args.worker)])
+        start_args.extend(["--worker", str(args.worker)])
     else:
-        worker = os.environ.get('CORE_WORKER')
+        worker = os.environ.get("CORE_WORKER")
         if isinstance(worker, str) and worker.isdigit():
-            start_args.extend(['--worker', worker])
+            start_args.extend(["--worker", worker])
 
     try:
         management.call_command(action, *services, *start_args)
     except KeyboardInterrupt:
-        logging.info('Cancel ...')
+        logging.info("Cancel ...")
         time.sleep(2)
     except Exception as exc:
         logging.error("Start service error {}: {}".format(services, exc))
@@ -70,22 +70,21 @@ def start_services():
 
 
 def dev():
-    services = args.services if isinstance(
-        args.services, list) else args.services
-    if services.__contains__('web'):
-        management.call_command('runserver', "0.0.0.0:8080")
-    elif services.__contains__('celery'):
-        management.call_command('celery', 'celery')
-    elif services.__contains__('local_model'):
-        os.environ.setdefault('SERVER_NAME', 'local_model')
+    services = args.services if isinstance(args.services, list) else args.services
+    if services.__contains__("web"):
+        management.call_command("runserver", "0.0.0.0:8080")
+    elif services.__contains__("celery"):
+        management.call_command("celery", "celery")
+    elif services.__contains__("local_model"):
+        os.environ.setdefault("SERVER_NAME", "local_model")
         from smartdoc.const import CONFIG
-        bind = f'{CONFIG.get("LOCAL_MODEL_HOST")}:{
-            CONFIG.get("LOCAL_MODEL_PORT")}'
-        management.call_command('runserver', bind)
+
+        bind = f'{CONFIG.get("LOCAL_MODEL_HOST")}:{CONFIG.get("LOCAL_MODEL_PORT")}'
+        management.call_command("runserver", bind)
 
 
-if __name__ == '__main__':
-    os.environ['HF_HOME'] = './apps/model/base'
+if __name__ == "__main__":
+    os.environ["HF_HOME"] = "./apps/model/base"
     parser = argparse.ArgumentParser(
         description="""
            qabot service control tools;
@@ -96,28 +95,35 @@ if __name__ == '__main__':
            """
     )
     parser.add_argument(
-        'action', type=str,
+        "action",
+        type=str,
         choices=("start", "dev", "upgrade_db", "collect_static"),
-        help="Action to run"
+        help="Action to run",
     )
     args, e = parser.parse_known_args()
     parser.add_argument(
-        "services", type=str, default='all' if args.action == 'start' else 'web', nargs="*",
-        choices=("all", "web", "task") if args.action == 'start' else (
-            "web", "celery", 'local_model'),
+        "services",
+        type=str,
+        default="all" if args.action == "start" else "web",
+        nargs="*",
+        choices=(
+            ("all", "web", "task")
+            if args.action == "start"
+            else ("web", "celery", "local_model")
+        ),
         help="The service to start",
     )
 
-    parser.add_argument('-d', '--daemon', nargs="?", const=True)
-    parser.add_argument('-w', '--worker', type=int, nargs="?")
-    parser.add_argument('-f', '--force', nargs="?", const=True)
+    parser.add_argument("-d", "--daemon", nargs="?", const=True)
+    parser.add_argument("-w", "--worker", type=int, nargs="?")
+    parser.add_argument("-f", "--force", nargs="?", const=True)
     args = parser.parse_args()
     action = args.action
     if action == "upgrade_db":
         perform_db_migrate()
     elif action == "collect_static":
         collect_static()
-    elif action == 'dev':
+    elif action == "dev":
         collect_static()
         perform_db_migrate()
         dev()

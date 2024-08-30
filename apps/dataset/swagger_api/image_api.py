@@ -14,9 +14,12 @@ from common.mixins.api_mixin import ApiMixin
 class ImageApi(ApiMixin):
     @staticmethod
     def get_request_params_api():
-        return [openapi.Parameter(name='file',
-                                  in_=openapi.IN_FORM,
-                                  type=openapi.TYPE_FILE,
-                                  required=True,
-                                  description='上传图片文件')
-                ]
+        return [
+            openapi.Parameter(
+                name="file",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                required=True,
+                description="上传图片文件",
+            )
+        ]

@@ -4,9 +4,7 @@ import logging
 import os
 
 from celery import subtask
-from celery.signals import (
-    worker_ready, worker_shutdown, after_setup_logger
-)
+from celery.signals import worker_ready, worker_shutdown, after_setup_logger
 from django.core.cache import cache
 from django_celery_beat.models import PeriodicTask
 
@@ -48,12 +46,14 @@ def after_app_shutdown_periodic_tasks(sender=None, **kwargs):
     cache.set("CELERY_APP_SHUTDOWN", 1, 10)
     tasks = get_after_app_shutdown_clean_tasks()
     logger.debug("Worker shutdown signal recv")
-    logger.debug("Clean period tasks: [{}]".format(', '.join(tasks)))
+    logger.debug("Clean period tasks: [{}]".format(", ".join(tasks)))
     PeriodicTask.objects.filter(name__in=tasks).delete()
 
 
 @after_setup_logger.connect
-def add_celery_logger_handler(sender=None, logger=None, loglevel=None, format=None, **kwargs):
+def add_celery_logger_handler(
+    sender=None, logger=None, loglevel=None, format=None, **kwargs
+):
     if not logger:
         return
     task_handler = CeleryThreadTaskFileHandler()

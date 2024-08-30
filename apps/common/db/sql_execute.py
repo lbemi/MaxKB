@@ -29,11 +29,11 @@ def sql_execute(sql: str, params):
 
 def update_execute(sql: str, params):
     """
-      执行一条sql
-      :param sql:     需要执行的sql
-      :param params:  sql参数
-      :return:        执行结果
-      """
+    执行一条sql
+    :param sql:     需要执行的sql
+    :param params:  sql参数
+    :return:        执行结果
+    """
     with connection.cursor() as cursor:
         cursor.execute(sql, params)
         cursor.close()

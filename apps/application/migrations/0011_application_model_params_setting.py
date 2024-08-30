@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('application', '0010_alter_chatrecord_details'),
+        ("application", "0010_alter_chatrecord_details"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='application',
-            name='model_params_setting',
-            field=models.JSONField(default={}, verbose_name='模型参数相关设置'),
+            model_name="application",
+            name="model_params_setting",
+            field=models.JSONField(default={}, verbose_name="模型参数相关设置"),
         ),
     ]

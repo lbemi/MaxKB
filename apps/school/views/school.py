@@ -13,13 +13,20 @@ from school.serializers.school_serializers import SchoolSerializer
 class School(APIView):
     authentication_classes = [TokenAuth]
 
-    @action(methods=['GET'], detail=False)
-    @swagger_auto_schema(operation_summary="获取学校列表信息",
-                         operation_id="获取学校列表信息",
-                         query_serializer=SchoolSerializer.Query,
-                         responses=result.get_api_response(
-                             SchoolSerializer.Query.get_response_body_api()),
-                         tags=['学校管理'])
+    @action(methods=["GET"], detail=False)
+    @swagger_auto_schema(
+        operation_summary="获取学校列表信息",
+        operation_id="获取学校列表信息",
+        query_serializer=SchoolSerializer.Query,
+        responses=result.get_api_response(
+            SchoolSerializer.Query.get_response_body_api()
+        ),
+        tags=["学校管理"],
+    )
     @has_permissions(PermissionConstants.USER_READ)
     def get(self, request: Request):
-        return result.success(SchoolSerializer.Query(data={'school_name': request.query_params.get("school_name")}).list())
+        return result.success(
+            SchoolSerializer.Query(
+                data={"school_name": request.query_params.get("school_name")}
+            ).list()
+        )

@@ -30,13 +30,19 @@ class FileCache(BaseCache):
             os.umask(old_umask)
 
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
-        expire = timeout if isinstance(timeout, int) or isinstance(timeout,
-                                                                   float) else timeout.total_seconds()
+        expire = (
+            timeout
+            if isinstance(timeout, int) or isinstance(timeout, float)
+            else timeout.total_seconds()
+        )
         return self.cache.add(key, value=value, expire=expire)
 
     def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
-        expire = timeout if isinstance(timeout, int) or isinstance(timeout,
-                                                                   float) else timeout.total_seconds()
+        expire = (
+            timeout
+            if isinstance(timeout, int) or isinstance(timeout, float)
+            else timeout.total_seconds()
+        )
         return self.cache.set(key, value=value, expire=expire)
 
     def get(self, key, default=None, version=None):
@@ -46,8 +52,11 @@ class FileCache(BaseCache):
         return self.cache.delete(key)
 
     def touch(self, key, timeout=DEFAULT_TIMEOUT, version=None):
-        expire = timeout if isinstance(timeout, int) or isinstance(timeout,
-                                                                   float) else timeout.total_seconds()
+        expire = (
+            timeout
+            if isinstance(timeout, int) or isinstance(timeout, float)
+            else timeout.total_seconds()
+        )
 
         return self.cache.touch(key, expire=expire)
 
@@ -66,10 +75,12 @@ class FileCache(BaseCache):
         delete_keys = []
         for key in self.cache.iterkeys():
             value = self.cache.get(key)
-            if (hasattr(value,
-                        'application') and value.application is not None and value.application.id is not None and
-                    str(
-                        value.application.id) == application_id):
+            if (
+                hasattr(value, "application")
+                and value.application is not None
+                and value.application.id is not None
+                and str(value.application.id) == application_id
+            ):
                 delete_keys.append(key)
         for key in delete_keys:
             self.delete(key)

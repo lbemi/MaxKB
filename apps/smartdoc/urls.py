@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function_lib: forms django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 import os
 
 from django.http import HttpResponse
@@ -33,15 +34,16 @@ from smartdoc.conf import PROJECT_DIR
 from rest_framework import permissions, status
 
 from common.auth import AnonymousAuthentication
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Python API",
-        default_version='v1',
+        default_version="v1",
         description="智能客服平台",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
-    authentication_classes=[AnonymousAuthentication]
+    authentication_classes=[AnonymousAuthentication],
 )
 urlpatterns = [
     path("api/", include("users.urls")),
@@ -56,13 +58,21 @@ urlpatterns = [
 def pro():
     # 暴露静态主要是swagger资源
     urlpatterns.append(
-        re_path(r'^static/(?P<path>.*)$', static.serve,
-                {'document_root': settings.STATIC_ROOT}, name='static'),
+        re_path(
+            r"^static/(?P<path>.*)$",
+            static.serve,
+            {"document_root": settings.STATIC_ROOT},
+            name="static",
+        ),
     )
     # 暴露ui静态资源
     urlpatterns.append(
-        re_path(r'^ui/(?P<path>.*)$', static.serve, {'document_root': os.path.join(settings.STATIC_ROOT, "ui")},
-                name='ui'),
+        re_path(
+            r"^ui/(?P<path>.*)$",
+            static.serve,
+            {"document_root": os.path.join(settings.STATIC_ROOT, "ui")},
+            name="ui",
+        ),
     )
 
 
@@ -75,23 +85,17 @@ def page_not_found(request, exception):
     页面不存在处理
     """
     if request.path.startswith("/api/"):
-        return Result(response_status=status.HTTP_404_NOT_FOUND, code=404, message="找不到接口")
-    index_path = os.path.join(PROJECT_DIR, 'apps', "static", 'ui', 'index.html')
+        return Result(
+            response_status=status.HTTP_404_NOT_FOUND, code=404, message="找不到接口"
+        )
+    index_path = os.path.join(PROJECT_DIR, "apps", "static", "ui", "index.html")
     if not os.path.exists(index_path):
         return HttpResponse("页面不存在", status=404)
     content = get_index_html(index_path)
-    if request.path.startswith('/ui/chat/'):
+    if request.path.startswith("/ui/chat/"):
         return HttpResponse(content, status=200)
-    return HttpResponse(content, status=200, headers={'X-Frame-Options': 'DENY'})
+    return HttpResponse(content, status=200, headers={"X-Frame-Options": "DENY"})
 
 
 handler404 = page_not_found
 init_doc(urlpatterns, application_urlpatterns)
-urlpatterns += [
-    re_path(r'^doc(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0),
-            name='schema-json'),  # 导出
-    path('doc/', schema_view.with_ui('swagger',
-         cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc',
-         cache_timeout=0), name='schema-redoc'),
-]

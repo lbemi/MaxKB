@@ -14,9 +14,13 @@ from django.core import cache
 from django.core import signing
 from rest_framework.authentication import TokenAuthentication
 
-from common.exception.app_exception import AppAuthenticationFailed, AppEmbedIdentityFailed, AppChatNumOutOfBoundsFailed
+from common.exception.app_exception import (
+    AppAuthenticationFailed,
+    AppEmbedIdentityFailed,
+    AppChatNumOutOfBoundsFailed,
+)
 
-token_cache = cache.caches['token_cache']
+token_cache = cache.caches["token_cache"]
 
 
 class AnonymousAuthentication(TokenAuthentication):
@@ -25,7 +29,7 @@ class AnonymousAuthentication(TokenAuthentication):
 
 
 def new_instance_by_class_path(class_path: str):
-    parts = class_path.rpartition('.')
+    parts = class_path.rpartition(".")
     package_path = parts[0]
     class_name = parts[2]
     module = import_module(package_path)
@@ -33,7 +37,9 @@ def new_instance_by_class_path(class_path: str):
     return HandlerClass()
 
 
-handles = [new_instance_by_class_path(class_path) for class_path in settings.AUTH_HANDLES]
+handles = [
+    new_instance_by_class_path(class_path) for class_path in settings.AUTH_HANDLES
+]
 
 
 class TokenDetails:
@@ -55,10 +61,10 @@ class TokenDetails:
 class TokenAuth(TokenAuthentication):
     # 重新 authenticate 方法，自定义认证规则
     def authenticate(self, request):
-        auth = request.META.get('HTTP_AUTHORIZATION')
+        auth = request.META.get("HTTP_AUTHORIZATION")
         # 未认证
         if auth is None:
-            raise AppAuthenticationFailed(1003, '未登录,请先登录')
+            raise AppAuthenticationFailed(1003, "未登录,请先登录")
         try:
             token_details = TokenDetails(auth)
             for handle in handles:
@@ -67,6 +73,8 @@ class TokenAuth(TokenAuthentication):
             raise AppAuthenticationFailed(1002, "身份验证信息不正确！非法用户")
         except Exception as e:
             traceback.format_exc()
-            if isinstance(e, AppEmbedIdentityFailed) or isinstance(e, AppChatNumOutOfBoundsFailed):
+            if isinstance(e, AppEmbedIdentityFailed) or isinstance(
+                e, AppChatNumOutOfBoundsFailed
+            ):
                 raise e
             raise AppAuthenticationFailed(1002, "身份验证信息不正确！非法用户")
