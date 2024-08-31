@@ -1,16 +1,13 @@
-
 FROM node:22-alpine as web-build
 COPY ui ui
 RUN cd ui && \
     npm config set registry https://registry.npmmirror.com/ && \
     npm install &&  \
     npm run build && \
-    rm -rf .node_modules
+    rm -rf ./node_modules
 
 FROM python:3.11-slim-bookworm
-# mkdir -p /usr/local/share/model
 COPY . /opt/app
-# COPY /usr/local/share/model/* /usr/local/share/model/
 COPY --from=web-build ui /opt/app/ui
 WORKDIR /opt/app
 ENV LANG=en_US.UTF-8 \
@@ -27,8 +24,7 @@ RUN python3 -m venv /opt/py3 && \
     rm -rf /opt/app/poetry.lock && \
     poetry install && \
     chmod 755 /opt/app/installer/run-app.sh && \
-    cp -f /opt/app/installer/run-app.sh /usr/bin/run-app.sh
+    cp -f /opt/app/installer/run-app.sh /usr/bin/run-app.sh 
 
 EXPOSE 8080
-ENTRYPOINT ["bash", "-c"]
 CMD [ "/usr/bin/run-app.sh" ]
